@@ -235,8 +235,31 @@ export default function TerminalAssistant() {
       setInput("");
       return;
     } else if (input.toLowerCase().includes("ai status") || input.toLowerCase().includes("check ai") || input.toLowerCase().includes("ai services")) {
+      // Build a detailed AI status message with additional information about configuration
       const statusMsg = `AI Services Status:\n- Quantum AI: Available and Active\n- Claude AI (Anthropic): ${aiServicesStatus.anthropic ? 'Available' : 'Not Available (API key missing)'}\n- GPT AI (OpenAI): ${aiServicesStatus.openai ? 'Available' : 'Not Available (API key missing)'}`;
+      
       setMessages(prev => [...prev, {text: statusMsg, isUser: false}]);
+      
+      // If any AI services are not available, suggest configuring them
+      if (!aiServicesStatus.anthropic || !aiServicesStatus.openai) {
+        setTimeout(() => {
+          const missingServices = [];
+          if (!aiServicesStatus.anthropic) missingServices.push("Claude AI (Anthropic)");
+          if (!aiServicesStatus.openai) missingServices.push("GPT AI (OpenAI)");
+          
+          const setupMsg = `Would you like to configure ${missingServices.join(" and ")}? Type "setup claude" or "setup gpt" to configure the respective service.`;
+          setMessages(prev => [...prev, {text: setupMsg, isUser: false}]);
+        }, 1000);
+      }
+      
+      setInput("");
+      return;
+    } else if (input.toLowerCase().includes("setup claude") || input.toLowerCase().includes("configure claude")) {
+      handleRequestApiKey('anthropic');
+      setInput("");
+      return;
+    } else if (input.toLowerCase().includes("setup gpt") || input.toLowerCase().includes("configure gpt")) {
+      handleRequestApiKey('openai');
       setInput("");
       return;
     }
@@ -345,6 +368,66 @@ export default function TerminalAssistant() {
     });
   };
   
+  // Function to handle requesting API keys when they're missing
+  const handleRequestApiKey = async (service: 'anthropic' | 'openai') => {
+    const serviceName = service === 'anthropic' ? 'Claude AI (Anthropic)' : 'GPT AI (OpenAI)';
+    const envVar = service === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY';
+    
+    // Display informative message about missing API key
+    setMessages(prev => [
+      ...prev,
+      {
+        text: `To use ${serviceName}, you need to configure an API key. The ${envVar} is not set in your environment.\n\nPlease add your API key to continue using this service.`,
+        isUser: false
+      }
+    ]);
+    
+    toast({
+      title: `${serviceName} API Key Required`,
+      description: `Please add your ${service === 'anthropic' ? 'Anthropic' : 'OpenAI'} API key to continue.`,
+      variant: "destructive"
+    });
+    
+    try {
+      // In a real application, this would be linked to a dialog form
+      // where the user could enter their API key
+      
+      // For now, we'll just add a simulated message about where to add the key
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev,
+          {
+            text: `To add your ${service === 'anthropic' ? 'Anthropic Claude' : 'OpenAI'} API key:\n\n1. Get your API key from ${service === 'anthropic' ? 'https://console.anthropic.com' : 'https://platform.openai.com'}\n2. Add it to the environment variables in your project\n3. Restart the application to apply changes\n\nOnce added, you'll be able to use ${serviceName} in your Quantum Terminal.`,
+            isUser: false
+          }
+        ]);
+        
+        // Optional: Here you could trigger a system to ask for secrets
+        // This would typically be handled by the platform configuration
+        
+        // Example message on how to set API keys
+        setTimeout(() => {
+          setMessages(prev => [
+            ...prev,
+            {
+              text: `Tip: If you're using a platform like Replit, you can add your API keys in the Secrets tab in the Tools panel. Make sure to set the key name as ${service === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'}.`,
+              isUser: false
+            }
+          ]);
+        }, 2000);
+        
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error handling API key request:', error);
+      toast({
+        title: "Error Setting API Key",
+        description: "There was a problem configuring your API key.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleToggleVoice = () => {
     setVoiceEnabled(!voiceEnabled);
     toast({
