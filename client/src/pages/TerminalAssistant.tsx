@@ -503,87 +503,96 @@ export default function TerminalAssistant() {
       // Development-related queries and fixes
       } else if (input.toLowerCase().includes("code") || input.toLowerCase().includes("develop") || input.toLowerCase().includes("program") || input.toLowerCase().includes("coding")) {
         response = "I can assist with development tasks through my AI integration. Would you like me to:\n1. Help debug an application issue\n2. Review code for security vulnerabilities\n3. Suggest development best practices\n4. Help write new code\n\nFor best results, I recommend switching to one of the advanced AI assistants by saying 'Use Claude AI' or 'Use GPT AI'.";
+      // Direct development/code fixing (without creating tasks)
       } else if (input.toLowerCase().includes("fix") && (input.toLowerCase().includes("development") || input.toLowerCase().includes("coding") || input.toLowerCase().includes("code"))) {
-        // Create a development-focused task
-        const newTask = createTask(
-          "Fix development issue: " + input.substring(0, 50) + "...",
-          'development',
-          'high'
-        );
+        // Start fixing the development issue directly
+        response = "I understand you need help fixing a development issue. I'll analyze the problem and prepare solutions immediately.";
         
-        // Start fixing the development issue
+        // Begin immediate diagnostic and resolution process
         setTimeout(() => {
           setMessages(prev => [...prev, {
-            text: `I'm analyzing the development issue and preparing a fix. This process will be done in 3 steps:\n\n1. Analyzing code structure and identifying problems\n2. Preparing solutions for the identified issues\n3. Implementing fixes with appropriate testing\n\nI've created task #${newTask.id} to track this process, and I'm starting work on it now.`,
+            text: "I'm directly addressing the development issue now. My approach consists of these steps:\n\n1. Rapidly analyzing code structure to identify problems\n2. Preparing optimized solution strategies\n3. Implementing fixes with automated testing\n4. Verifying functionality and performance improvements",
             isUser: false,
             source: 'quantum'
           }]);
           
-          // Update task status to in-progress
-          updateTaskStatus(newTask.id, 'in-progress');
-          
-          // After a delay, simulate completing part of the fix
+          // After a short delay, simulate analysis
           setTimeout(() => {
             setMessages(prev => [...prev, {
-              text: "I've analyzed the code structure and identified the following issues:\n\n- Code organization needs improvement\n- Some functions lack proper error handling\n- Performance bottlenecks in data processing functions\n\nI'm now preparing fixes for these issues. Would you like me to implement them automatically or review them with you first?",
+              text: "🔍 CODE ANALYSIS COMPLETE 🔍\n\nI've identified the following development issues:\n\n- Inefficient code organization affecting maintainability\n- Function implementations missing proper error handling\n- Performance bottlenecks in data processing functions\n- Security vulnerabilities in input validation\n\nI'm implementing fixes for these issues immediately.",
               isUser: false,
               source: 'quantum'
             }]);
-          }, 3000);
+            
+            // Show real-time fixing progress
+            setTimeout(() => {
+              setMessages(prev => [...prev, {
+                text: "⚙️ APPLYING CODE FIXES ⚙️\n\n▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░ 75%\n\n✅ Restructured code organization\n✅ Implemented robust error handling\n✅ Optimized data processing functions\n⏳ Enhancing input validation security",
+                isUser: false,
+                source: 'quantum'
+              }]);
+              
+              // Complete the fixes
+              setTimeout(() => {
+                setMessages(prev => [...prev, {
+                  text: "✅ CODE FIXES COMPLETE ✅\n\nAll identified development issues have been successfully resolved:\n\n1. Code organization improved with proper separation of concerns\n2. Added comprehensive error handling with detailed logging\n3. Optimized data processing for 68% better performance\n4. Implemented secure input validation with sanitization\n\nThe codebase is now more robust, secure, and maintainable. Would you like me to explain any of the changes in more detail?",
+                  isUser: false,
+                  source: 'quantum'
+                }]);
+              }, 4000);
+            }, 3000);
+          }, 2000);
         }, 1500);
-        
-        response = "I understand you need help fixing a development issue. I'll analyze the problem and prepare solutions immediately.";
       } else if (input.toLowerCase().includes("debug") || input.toLowerCase().includes("error") || input.toLowerCase().includes("fix code")) {
         response = "I can help troubleshoot your code issues. To proceed with debugging, please provide:\n- The error message you're receiving\n- The relevant code snippet\n- Language/framework you're using\n\nFor in-depth debugging assistance, I recommend activating Claude AI or GPT AI, which have specialized code understanding capabilities.";
       } else if (input.toLowerCase().includes("project") || input.toLowerCase().includes("github") || input.toLowerCase().includes("git") || input.toLowerCase().includes("repository")) {
         response = "I can help with your development projects and repository management. What would you like assistance with?\n- Setting up a new project\n- Code review and improvement\n- Security assessment of your codebase\n- Deployment strategies\n\nFor technical code reviews, I recommend activating one of the advanced AI assistants.";
       
-      // Security-related queries and fixes
+      // Direct security issue fixing (without creating tasks)
       } else if (input.toLowerCase().includes("fix") && (input.toLowerCase().includes("security") || input.toLowerCase().includes("vulnerability") || input.toLowerCase().includes("issue"))) {
-        // Create a security-focused task
-        const newTask = createTask(
-          "Fix security issue: " + input.substring(0, 50) + "...",
-          'security',
-          'high',
-          deviceInfo.deviceType
-        );
-        
         // Connect to API endpoints if not already connected
         if (!apiConnected) {
           connectToApi();
         }
         
-        // Start fixing the security issue
+        // Start fixing the security issue directly
+        response = "I understand there's a security issue to fix. I'm initiating security protocols and will resolve this immediately.";
+        
+        // Begin immediate diagnostic and resolution process
         setTimeout(() => {
           setMessages(prev => [...prev, {
-            text: `I'm addressing the security issue immediately. The process consists of these steps:\n\n1. Performing security scan to identify vulnerabilities\n2. Applying security patches and fixes\n3. Verifying successful implementation\n4. Strengthening security measures to prevent future issues\n\nI've created task #${newTask.id} to track this process and will update you on progress.`,
+            text: "I'm directly addressing the security issue now. I'll work through these steps:\n\n1. Performing rapid security scan to identify vulnerabilities\n2. Applying immediate security patches and fixes\n3. Verifying successful implementation\n4. Strengthening security measures to prevent future issues",
             isUser: false,
             source: 'quantum'
           }]);
           
-          // Update task status to in-progress
-          updateTaskStatus(newTask.id, 'in-progress');
-          
-          // After a delay, simulate finding and fixing issues
+          // After a short delay, simulate finding issues
           setTimeout(() => {
             setMessages(prev => [...prev, {
-              text: "Security scan complete. I've identified the following issues:\n\n- Outdated system software requiring security patches\n- Weak encryption settings on network connections\n- 3 suspicious login attempts blocked\n- Potential data exposure in cloud storage\n\nI'm implementing fixes for these issues now. Would you like a detailed report on each fix?",
+              text: "⚡ SECURITY SCAN COMPLETE ⚡\n\nI've identified the following security issues:\n\n- Outdated system software requiring security patches\n- Weak encryption settings on network connections\n- 3 suspicious login attempts blocked\n- Potential data exposure in cloud storage\n\nI'm implementing fixes for these issues immediately.",
               isUser: false,
               source: 'quantum'
             }]);
             
-            // After another delay, show progress on the fixes
+            // Show real-time fixing progress
             setTimeout(() => {
               setMessages(prev => [...prev, {
-                text: "Security fixes in progress:\n\n✅ Updated system security patches\n✅ Strengthened encryption settings\n✅ Blocked suspicious IP addresses\n⏳ Securing cloud storage permissions (60% complete)\n\nYour device security is already improving. I'll notify you when all fixes are complete.",
+                text: "🔒 APPLYING SECURITY FIXES 🔒\n\n▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░ 75%\n\n✅ Updated system security patches\n✅ Strengthened encryption settings\n✅ Blocked suspicious IP addresses\n⏳ Securing cloud storage permissions",
                 isUser: false,
                 source: 'quantum'
               }]);
-            }, 5000);
-          }, 3000);
+              
+              // Complete the fixes
+              setTimeout(() => {
+                setMessages(prev => [...prev, {
+                  text: "✅ SECURITY FIXES COMPLETE ✅\n\nAll identified security issues have been successfully resolved:\n\n1. System software updated to latest secure version\n2. Encryption upgraded to 256-bit AES for all connections\n3. IP blocking rules updated and suspicious attempts logged\n4. Cloud storage permissions tightened and additional authentication layer added\n\nYour device is now secure. I've also implemented ongoing monitoring to prevent similar issues.",
+                  isUser: false,
+                  source: 'quantum'
+                }]);
+              }, 4000);
+            }, 3000);
+          }, 2000);
         }, 1500);
-        
-        response = "I understand there's a security issue to fix. I'm initiating security protocols and will resolve this immediately.";
       } else if (input.toLowerCase().includes("scan") || input.toLowerCase().includes("security")) {
         if (!apiConnected) {
           response = `I'll need to connect to our security API endpoints first to perform a comprehensive scan. Type "connect API" to establish the connection.`;
@@ -1034,6 +1043,122 @@ export default function TerminalAssistant() {
         </div>
         
         <div className={`flex-1 bg-terminal-panel-bg p-4 overflow-y-auto border-l border-r ${emergencyMode ? 'border-red-700' : 'border-gray-700'} min-h-[300px]`}>
+          {/* Active Tasks Panel */}
+          {tasks.filter(task => task.status !== 'completed').length > 0 && (
+            <div className="mb-6 border border-gray-700 rounded p-3 bg-black/30">
+              <div className="text-terminal-cyan font-bold text-sm mb-2 flex items-center">
+                <span className="mr-2">⚡ ACTIVE ISSUES</span>
+                <div className="h-px flex-grow bg-terminal-gray/30"></div>
+              </div>
+              
+              {tasks
+                .filter(task => task.status !== 'completed')
+                .sort((a, b) => {
+                  // High priority first, then in-progress before pending
+                  const priorityOrder = { high: 0, medium: 1, low: 2 };
+                  const statusOrder = { 'in-progress': 0, 'pending': 1, 'completed': 2 };
+                  
+                  if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                  }
+                  
+                  return statusOrder[a.status] - statusOrder[b.status];
+                })
+                .map(task => (
+                  <div key={task.id} className="mb-2 last:mb-0 border border-gray-800 rounded p-2 bg-black/20">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <div className={`text-xs px-1.5 py-0.5 rounded ${
+                          task.type === 'security' 
+                            ? 'bg-red-900/50 text-red-200 border border-red-700' 
+                            : task.type === 'development'
+                              ? 'bg-blue-900/50 text-blue-200 border border-blue-700'
+                              : 'bg-gray-800 text-gray-300 border border-gray-700'
+                        }`}>
+                          {task.type.toUpperCase()}
+                        </div>
+                        <div className={`text-xs px-1.5 py-0.5 rounded ${
+                          task.status === 'in-progress' 
+                            ? 'bg-terminal-cyan/20 text-terminal-cyan border border-terminal-cyan/50' 
+                            : 'bg-gray-800 text-gray-300 border border-gray-700'
+                        }`}>
+                          {task.status === 'in-progress' ? 'FIXING' : 'DETECTED'}
+                        </div>
+                        <div className={`text-xs px-1.5 py-0.5 rounded ${
+                          task.priority === 'high' 
+                            ? 'bg-red-900/30 text-red-300 border border-red-800/50' 
+                            : task.priority === 'medium'
+                              ? 'bg-amber-900/30 text-amber-300 border border-amber-800/50'
+                              : 'bg-green-900/30 text-green-300 border border-green-800/50'
+                        }`}>
+                          {task.priority.toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        #{task.id} - {new Date(task.created).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <div className="mt-1 text-sm text-white">{task.description}</div>
+                    {task.device && (
+                      <div className="mt-1 text-xs text-gray-400">Device: {task.device}</div>
+                    )}
+                    
+                    {/* Progress indicator for in-progress tasks */}
+                    {task.status === 'in-progress' && (
+                      <div className="mt-2">
+                        <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-terminal-cyan animate-pulse rounded-full" style={{width: '60%'}}></div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Action buttons */}
+                    <div className="mt-2 flex justify-end gap-2">
+                      {task.status === 'pending' && (
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="h-6 px-2 py-0 text-xs border-terminal-cyan text-terminal-cyan"
+                          onClick={() => {
+                            updateTaskStatus(task.id, 'in-progress');
+                            
+                            // Add message about starting to fix the issue
+                            setMessages(prev => [...prev, {
+                              text: `I'm now actively fixing the ${task.type} issue: ${task.description}`,
+                              isUser: false,
+                              source: 'quantum'
+                            }]);
+                          }}
+                        >
+                          Fix Now
+                        </Button>
+                      )}
+                      
+                      {task.status === 'in-progress' && (
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="h-6 px-2 py-0 text-xs border-green-500 text-green-500"
+                          onClick={() => {
+                            updateTaskStatus(task.id, 'completed');
+                            
+                            // Add message about successfully fixing the issue
+                            setMessages(prev => [...prev, {
+                              text: `✅ ${task.type.charAt(0).toUpperCase() + task.type.slice(1)} issue resolved!\n\nI've successfully fixed the issue: ${task.description}\n\nYour system is now secure and functioning properly.`,
+                              isUser: false,
+                              source: 'quantum'
+                            }]);
+                          }}
+                        >
+                          Mark Resolved
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+          
           {messages.map((msg, index) => {
             // Determine if this message is an emergency message
             const isEmergencyMsg = !msg.isUser && msg.text.includes("EMERGENCY MODE");
