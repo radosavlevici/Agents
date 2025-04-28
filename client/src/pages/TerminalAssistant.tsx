@@ -557,7 +557,7 @@ export default function TerminalAssistant() {
 
   return (
     <QuantumTerminalLayout title="Personal Assistant">
-      <div className="flex flex-col h-[calc(100vh-300px)] max-h-[600px]">
+      <div className="flex flex-col min-h-[500px] h-full">
         <div className={`bg-terminal-dark-bg p-4 rounded-t border ${emergencyMode ? 'border-red-700 border-2' : 'border-gray-700'}`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -605,7 +605,7 @@ export default function TerminalAssistant() {
           </div>
           
           <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0">
               <div className="flex items-center gap-2">
                 <div className="text-terminal-gray text-xs">Voice Commands:</div>
                 <Switch 
@@ -615,9 +615,10 @@ export default function TerminalAssistant() {
                 />
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button 
                   variant="outline" 
+                  size="sm"
                   className="border-terminal-cyan text-terminal-cyan hover:bg-terminal-cyan hover:bg-opacity-20 text-xs"
                   onClick={() => {
                     toast({
@@ -630,6 +631,7 @@ export default function TerminalAssistant() {
                 </Button>
                 <Button 
                   variant="outline" 
+                  size="sm"
                   className="border-terminal-amber text-terminal-amber hover:bg-terminal-amber hover:bg-opacity-20 text-xs"
                   onClick={handleActivateNotifications}
                 >
@@ -662,9 +664,9 @@ export default function TerminalAssistant() {
             {/* AI Services Control Panel */}
             {!emergencyMode && (
               <div className="flex flex-col mt-2 bg-black/30 p-2 rounded border border-gray-700">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
                   <div className="text-xs text-terminal-gray font-semibold">AI Services:</div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
                     <Button
                       size="sm"
                       variant={activeAssistant === 'quantum' ? "default" : "outline"}
@@ -694,8 +696,8 @@ export default function TerminalAssistant() {
                 
                 {/* AI Service Status Indicators */}
                 <div className="mt-3">
-                  <div className="flex justify-between items-center">
-                    <div className="flex space-x-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+                    <div className="flex flex-wrap gap-x-4 gap-y-2">
                       <div className="flex items-center">
                         <div className={`h-2 w-2 rounded-full mr-1.5 bg-terminal-cyan`}></div>
                         <span className="text-xs text-terminal-cyan">Quantum: Active</span>
@@ -717,7 +719,7 @@ export default function TerminalAssistant() {
                     <Button
                       size="sm" 
                       variant="outline"
-                      className="text-xs border-terminal-gray text-terminal-gray hover:bg-terminal-cyan/10 hover:text-terminal-cyan"
+                      className="text-xs border-terminal-gray text-terminal-gray hover:bg-terminal-cyan/10 hover:text-terminal-cyan self-end sm:self-auto"
                       onClick={async () => {
                         // Attempt to refresh API key status
                         const statusMsg = "Checking AI service status and refreshing connections...";
@@ -758,27 +760,67 @@ export default function TerminalAssistant() {
           </div>
         </div>
         
-        <div className={`flex-1 bg-terminal-panel-bg p-4 overflow-y-auto border-l border-r ${emergencyMode ? 'border-red-700' : 'border-gray-700'}`}>
+        <div className={`flex-1 bg-terminal-panel-bg p-4 overflow-y-auto border-l border-r ${emergencyMode ? 'border-red-700' : 'border-gray-700'} min-h-[300px]`}>
           {messages.map((msg, index) => {
             // Determine if this message is an emergency message
             const isEmergencyMsg = !msg.isUser && msg.text.includes("EMERGENCY MODE");
             
             return (
-              <div key={index} className={`mb-4 ${msg.isUser ? 'text-right' : ''}`}>
-                <div className={`inline-block p-3 rounded-lg ${
-                  msg.isUser 
-                    ? 'bg-terminal-dark-bg text-terminal-green border border-terminal-green' 
-                    : isEmergencyMsg
-                      ? 'bg-red-950 text-terminal-red border border-terminal-red animate-pulse'
-                      : 'bg-black bg-opacity-40 text-terminal-cyan border border-terminal-cyan'
-                }`}>
-                  {msg.text.split('\n').map((text, i) => (
-                    <div key={i}>{text}</div>
-                  ))}
+              <div key={index} className={`mb-6 ${msg.isUser ? 'flex justify-end' : 'flex justify-start'}`}>
+                {/* Message sender indicator */}
+                {!msg.isUser && (
+                  <div className="flex items-start mr-2">
+                    <div className={`w-2 h-2 mt-2 rounded-full ${
+                      isEmergencyMsg ? 'bg-terminal-red' : 
+                      activeAssistant === 'anthropic' ? 'bg-purple-500' :
+                      activeAssistant === 'openai' ? 'bg-green-500' :
+                      'bg-terminal-cyan'
+                    }`}></div>
+                  </div>
+                )}
+                
+                {/* Message content */}
+                <div className={`${msg.isUser ? 'max-w-[80%]' : 'max-w-[85%]'}`}>
+                  {/* Sender label */}
+                  <div className={`text-xs mb-1 ${
+                    msg.isUser ? 'text-terminal-green text-right' : 
+                    isEmergencyMsg ? 'text-terminal-red font-bold' : 
+                    activeAssistant === 'anthropic' ? 'text-purple-400' :
+                    activeAssistant === 'openai' ? 'text-green-400' :
+                    'text-terminal-cyan'
+                  }`}>
+                    {msg.isUser ? 'You' : 
+                     isEmergencyMsg ? 'EMERGENCY SYSTEM' :
+                     activeAssistant === 'anthropic' ? 'Claude AI' :
+                     activeAssistant === 'openai' ? 'GPT AI' :
+                     'Quantum AI'}
+                  </div>
+                  
+                  {/* Message bubble */}
+                  <div className={`p-3 rounded-lg ${
+                    msg.isUser 
+                      ? 'bg-terminal-dark-bg text-terminal-green border border-terminal-green' 
+                      : isEmergencyMsg
+                        ? 'bg-red-950 text-terminal-red border border-terminal-red animate-pulse'
+                        : 'bg-black bg-opacity-40 text-terminal-cyan border border-terminal-cyan'
+                  }`}>
+                    {msg.text.split('\n').map((text, i) => (
+                      <div key={i} className="mb-1">{text}</div>
+                    ))}
+                  </div>
+                  
+                  {/* Timestamp or device info */}
+                  {isEmergencyMsg && (
+                    <div className="text-xs text-terminal-red mt-1">
+                      Device: {deviceInfo.deviceType} {deviceInfo.modelNumber} (SN: {deviceInfo.serialNumber})
+                    </div>
+                  )}
                 </div>
-                {isEmergencyMsg && (
-                  <div className="text-xs text-terminal-red mt-1">
-                    Device: {deviceInfo.deviceType} {deviceInfo.modelNumber} (SN: {deviceInfo.serialNumber})
+                
+                {/* User message indicator */}
+                {msg.isUser && (
+                  <div className="flex items-start ml-2">
+                    <div className="w-2 h-2 mt-2 rounded-full bg-terminal-green"></div>
                   </div>
                 )}
               </div>
