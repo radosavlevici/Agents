@@ -8,8 +8,19 @@ import { getAIResponse, aiServicesStatus, checkApiKeyStatus } from "@/lib/aiServ
 
 export default function TerminalAssistant() {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<{text: string, isUser: boolean}[]>([
-    {text: "Hello Ervin, I am your personal Quantum Assistant linked to ervin210@icloud.com. How can I help you today?", isUser: false},
+  // Define message type with source information
+  type Message = {
+    text: string;
+    isUser: boolean;
+    source?: 'quantum' | 'anthropic' | 'openai' | 'system' | 'emergency';
+  };
+  
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      text: "Hello Ervin, I am your personal Quantum Assistant linked to ervin210@icloud.com. How can I help you today?", 
+      isUser: false,
+      source: 'quantum'
+    },
   ]);
   const [isMobileConnected, setIsMobileConnected] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -771,9 +782,10 @@ export default function TerminalAssistant() {
                 {!msg.isUser && (
                   <div className="flex items-start mr-2">
                     <div className={`w-2 h-2 mt-2 rounded-full ${
-                      isEmergencyMsg ? 'bg-terminal-red' : 
-                      activeAssistant === 'anthropic' ? 'bg-purple-500' :
-                      activeAssistant === 'openai' ? 'bg-green-500' :
+                      isEmergencyMsg || msg.source === 'emergency' ? 'bg-terminal-red' : 
+                      msg.source === 'anthropic' ? 'bg-purple-500' :
+                      msg.source === 'openai' ? 'bg-green-500' :
+                      msg.source === 'system' ? 'bg-gray-500' :
                       'bg-terminal-cyan'
                     }`}></div>
                   </div>
@@ -784,15 +796,16 @@ export default function TerminalAssistant() {
                   {/* Sender label */}
                   <div className={`text-xs mb-1 ${
                     msg.isUser ? 'text-terminal-green text-right' : 
-                    isEmergencyMsg ? 'text-terminal-red font-bold' : 
-                    activeAssistant === 'anthropic' ? 'text-purple-400' :
-                    activeAssistant === 'openai' ? 'text-green-400' :
+                    isEmergencyMsg || msg.source === 'emergency' ? 'text-terminal-red font-bold' : 
+                    msg.source === 'anthropic' ? 'text-purple-400' :
+                    msg.source === 'openai' ? 'text-green-400' :
                     'text-terminal-cyan'
                   }`}>
                     {msg.isUser ? 'You' : 
-                     isEmergencyMsg ? 'EMERGENCY SYSTEM' :
-                     activeAssistant === 'anthropic' ? 'Claude AI' :
-                     activeAssistant === 'openai' ? 'GPT AI' :
+                     isEmergencyMsg || msg.source === 'emergency' ? 'EMERGENCY SYSTEM' :
+                     msg.source === 'anthropic' ? 'Claude AI' :
+                     msg.source === 'openai' ? 'GPT AI' :
+                     msg.source === 'system' ? 'System' :
                      'Quantum AI'}
                   </div>
                   
@@ -800,9 +813,15 @@ export default function TerminalAssistant() {
                   <div className={`p-3 rounded-lg ${
                     msg.isUser 
                       ? 'bg-terminal-dark-bg text-terminal-green border border-terminal-green' 
-                      : isEmergencyMsg
+                      : isEmergencyMsg || msg.source === 'emergency'
                         ? 'bg-red-950 text-terminal-red border border-terminal-red animate-pulse'
-                        : 'bg-black bg-opacity-40 text-terminal-cyan border border-terminal-cyan'
+                        : msg.source === 'anthropic'
+                          ? 'bg-black bg-opacity-40 text-purple-400 border border-purple-500'
+                          : msg.source === 'openai'
+                            ? 'bg-black bg-opacity-40 text-green-400 border border-green-500'
+                            : msg.source === 'system'
+                              ? 'bg-black bg-opacity-40 text-gray-300 border border-gray-600'
+                              : 'bg-black bg-opacity-40 text-terminal-cyan border border-terminal-cyan'
                   }`}>
                     {msg.text.split('\n').map((text, i) => (
                       <div key={i} className="mb-1">{text}</div>
