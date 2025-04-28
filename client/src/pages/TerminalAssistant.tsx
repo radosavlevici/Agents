@@ -1160,7 +1160,7 @@ Identified ${Math.floor(Math.random() * 3) + 2} potential threat vectors with 96
         // GPT develops technical security solution
         setTimeout(() => {
           const threats = securityKnowledgeBase.application_security.reduce((acc: string[], sec) => [...acc, ...sec.threats], [] as string[]);
-          const mitigations = securityKnowledgeBase.application_security.reduce((acc, sec) => [...acc, ...sec.mitigations], []);
+          const mitigations = securityKnowledgeBase.application_security.reduce((acc: string[], sec) => [...acc, ...sec.mitigations], [] as string[]);
           
           setMessages(prev => [...prev, {
             text: `💻 GPT AI: Formulating comprehensive security mitigation strategy...\n\nDeveloping defense-in-depth approach based on identified threats:
@@ -1188,8 +1188,8 @@ Security solution prepared with 98% confidence rating.`,
                 text: `✅ SECURITY VULNERABILITY REMEDIATION COMPLETE\n\nCollaborative AI Security Enhancement:
 • Claude AI identified threat patterns using security knowledge spanning ${Object.keys(securityKnowledgeBase).length} security domains
 • GPT AI formulated defense-in-depth strategy incorporating ${
-                  securityKnowledgeBase.application_security.reduce((acc, sec) => acc + sec.mitigations.length, 0) +
-                  securityKnowledgeBase.network_security.reduce((acc, sec) => acc + sec.mitigations.length, 0)
+                  securityKnowledgeBase.application_security.reduce((acc: number, sec) => acc + sec.mitigations.length, 0) +
+                  securityKnowledgeBase.network_security.reduce((acc: number, sec) => acc + sec.mitigations.length, 0)
                 } protection techniques
 • Quantum Agent implemented precise system hardening across all device layers
 
