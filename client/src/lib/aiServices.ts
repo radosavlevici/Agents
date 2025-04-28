@@ -144,14 +144,23 @@ export async function getAIResponse(message: string, preferredService?: 'anthrop
 
   // If no preferred service specified, select based on availability and query content
   if (!preferredService) {
-    const securityKeywords = ['security', 'privacy', 'protect', 'hack', 'breach', 'scan', 'threat'];
-    const dataAnalysisKeywords = ['analyze', 'data', 'statistics', 'pattern', 'insight'];
+    const securityKeywords = ['security', 'privacy', 'protect', 'hack', 'breach', 'scan', 'threat', 'vulnerability', 
+      'exploit', 'penetration', 'firewall', 'encryption', 'vpn', 'malware', 'virus', 'ransomware', 'spyware', 
+      'authentication', 'authorization', 'injection', 'xss', 'csrf', 'sql injection', 'ddos'];
+      
+    const developmentKeywords = ['code', 'develop', 'program', 'coding', 'debug', 'error', 'fix code', 'algorithm',
+      'function', 'class', 'object', 'api', 'database', 'framework', 'library', 'javascript', 'python', 'java',
+      'typescript', 'react', 'node', 'express', 'html', 'css', 'sql', 'refactoring', 'optimization', 'git'];
+      
+    const dataAnalysisKeywords = ['analyze', 'data', 'statistics', 'pattern', 'insight', 'visualization', 'dashboard',
+      'report', 'metric', 'kpi', 'machine learning', 'model', 'prediction', 'classification', 'regression', 'clustering'];
     
     const isSecurityRelated = securityKeywords.some(keyword => message.toLowerCase().includes(keyword));
+    const isDevelopmentRelated = developmentKeywords.some(keyword => message.toLowerCase().includes(keyword));
     const isDataAnalysisRelated = dataAnalysisKeywords.some(keyword => message.toLowerCase().includes(keyword));
     
-    if (hasAnthropicKey && (isSecurityRelated || !hasOpenAIKey)) {
-      preferredService = 'anthropic';  // Claude is particularly good with security topics
+    if (hasAnthropicKey && (isSecurityRelated || isDevelopmentRelated || !hasOpenAIKey)) {
+      preferredService = 'anthropic';  // Claude is particularly good with security and code topics
     } else if (hasOpenAIKey && (isDataAnalysisRelated || !hasAnthropicKey)) {
       preferredService = 'openai';     // GPT for data analysis and general queries
     } else if (hasAnthropicKey) {

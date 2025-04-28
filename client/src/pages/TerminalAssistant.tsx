@@ -463,12 +463,30 @@ export default function TerminalAssistant() {
         response = "Your iCloud email (ervin210@icloud.com) is secure. Last login was from your usual location. No suspicious activities detected. Would you like me to scan for potential phishing attempts?";
       } else if (input.toLowerCase().includes("phone") || input.toLowerCase().includes("mobile") || input.toLowerCase().includes("device")) {
         response = `Your iPhone (${deviceInfo.modelNumber}, SN:${deviceInfo.serialNumber}) is currently connected and secured. Battery level is at ${deviceInfo.batteryStatus}. Running ${deviceInfo.osVersion}. Last backup: ${deviceInfo.lastBackup}. Would you like me to run a security scan?`;
+      
+      // Development-related queries
+      } else if (input.toLowerCase().includes("code") || input.toLowerCase().includes("develop") || input.toLowerCase().includes("program") || input.toLowerCase().includes("coding")) {
+        response = "I can assist with development tasks through my AI integration. Would you like me to:\n1. Help debug an application issue\n2. Review code for security vulnerabilities\n3. Suggest development best practices\n4. Help write new code\n\nFor best results, I recommend switching to one of the advanced AI assistants by saying 'Use Claude AI' or 'Use GPT AI'.";
+      } else if (input.toLowerCase().includes("debug") || input.toLowerCase().includes("error") || input.toLowerCase().includes("fix code")) {
+        response = "I can help troubleshoot your code issues. To proceed with debugging, please provide:\n- The error message you're receiving\n- The relevant code snippet\n- Language/framework you're using\n\nFor in-depth debugging assistance, I recommend activating Claude AI or GPT AI, which have specialized code understanding capabilities.";
+      } else if (input.toLowerCase().includes("project") || input.toLowerCase().includes("github") || input.toLowerCase().includes("git") || input.toLowerCase().includes("repository")) {
+        response = "I can help with your development projects and repository management. What would you like assistance with?\n- Setting up a new project\n- Code review and improvement\n- Security assessment of your codebase\n- Deployment strategies\n\nFor technical code reviews, I recommend activating one of the advanced AI assistants.";
+      
+      // Security-related queries
       } else if (input.toLowerCase().includes("scan") || input.toLowerCase().includes("security")) {
         if (!apiConnected) {
           response = `I'll need to connect to our security API endpoints first to perform a comprehensive scan. Type "connect API" to establish the connection.`;
         } else {
           response = `Initiating comprehensive security scan for your iPhone ${deviceInfo.modelNumber} and all devices linked to ervin210@icloud.com. This will check for vulnerabilities, malware, and unauthorized access attempts. I'll notify you when complete.`;
         }
+      } else if (input.toLowerCase().includes("vulnerability") || input.toLowerCase().includes("exploit") || input.toLowerCase().includes("hack") || input.toLowerCase().includes("penetration test")) {
+        response = "I can help analyze potential security vulnerabilities in your systems. For a comprehensive security assessment, I would need:\n- The specific system or application to analyze\n- The type of vulnerabilities you're concerned about\n- Any recent security incidents\n\nWould you like me to activate Claude AI or GPT AI for a detailed security analysis?";
+      } else if (input.toLowerCase().includes("firewall") || input.toLowerCase().includes("network security") || input.toLowerCase().includes("encryption") || input.toLowerCase().includes("vpn")) {
+        response = "I can help configure and optimize your network security settings. For personal devices like your iPhone, I recommend setting up:\n1. VPN for secure browsing\n2. Advanced firewall settings\n3. DNS-level protection\n4. Encrypted communications\n\nWould you like details on any specific security measure?";
+      } else if (input.toLowerCase().includes("malware") || input.toLowerCase().includes("virus") || input.toLowerCase().includes("ransomware") || input.toLowerCase().includes("spyware")) {
+        response = "I can check your device for malicious software and help remove any threats. Your iPhone has built-in protection against common malware, but additional steps can enhance your security. Would you like me to scan your device or explain how to improve your protection against malware?";
+      
+      // Original patterns  
       } else if (input.toLowerCase().includes("alert") || input.toLowerCase().includes("warning")) {
         response = "You have 2 active security notices: 1) A new device logged into your Apple account from Los Angeles yesterday. 2) 3 failed login attempts on your iCloud Drive. Would you like me to lock down your account temporarily?";
       } else if (input.toLowerCase().includes("photos") || input.toLowerCase().includes("files")) {
@@ -485,7 +503,7 @@ export default function TerminalAssistant() {
                      apiInfo.endpoints.map(ep => `- ${ep.name} (${ep.url}): ${ep.status}`).join('\n');
         }
       } else if (input.toLowerCase().includes("ai") || input.toLowerCase().includes("assistant")) {
-        response = "I can connect to advanced AI services to enhance my capabilities. You can say 'Use Claude AI' or 'Use GPT AI' to activate these assistants.";
+        response = "I can connect to advanced AI services to enhance my capabilities. You can say 'Use Claude AI' or 'Use GPT AI' to activate these assistants for in-depth development and security assistance.";
       }
       
       setMessages(prev => [...prev, {
