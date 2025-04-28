@@ -541,7 +541,8 @@ export default function TerminalAssistant() {
       ...prev,
       {
         text: `To use ${serviceName}, you need to configure an API key. The ${envVar} is not set in your environment.\n\nPlease add your API key to continue using this service.`,
-        isUser: false
+        isUser: false,
+        source: 'system'
       }
     ]);
     
@@ -558,7 +559,8 @@ export default function TerminalAssistant() {
           ...prev,
           {
             text: `To add your ${service === 'anthropic' ? 'Anthropic Claude' : 'OpenAI'} API key:\n\n1. Get your API key from ${service === 'anthropic' ? 'https://console.anthropic.com' : 'https://platform.openai.com'}\n2. Add it to the environment variables in your project using the Secrets Manager\n3. Restart the application to apply changes\n\nOnce added, you'll be able to use ${serviceName} in your Quantum Terminal.`,
-            isUser: false
+            isUser: false,
+            source: 'system'
           }
         ]);
         
@@ -568,7 +570,8 @@ export default function TerminalAssistant() {
             ...prev,
             {
               text: `Tip: You need to set your API key as an environment variable named ${service === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'}. This will allow your Quantum Terminal to securely connect to the ${serviceName} service.`,
-              isUser: false
+              isUser: false,
+              source: 'system'
             }
           ]);
           
@@ -578,7 +581,8 @@ export default function TerminalAssistant() {
               ...prev,
               {
                 text: `⚡ [ACTION REQUIRED] ⚡\n\nPlease set up your ${service === 'anthropic' ? 'Anthropic' : 'OpenAI'} API key to continue using the ${serviceName} functionality.\n\nType 'yes' to continue if you've added the API key, or 'no' if you need help getting one.`,
-                isUser: false
+                isUser: false,
+                source: 'system'
               }
             ]);
             

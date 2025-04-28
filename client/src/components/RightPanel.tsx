@@ -61,9 +61,9 @@ const RightPanel = () => {
           <div className="text-sm mt-3">
             <div className="text-terminal-cyan mb-1">Copyright Information:</div>
             <div className="text-terminal-gray">
-              Copyright © Ervin Remus Radosavljevici (01/09/1987) - Email: ervin210@icloud.com - All Rights Reserved.
+              Copyright © Ervin Remus Radosavlevici (01/09/1987) - Email: ervin210@icloud.com - All Rights Reserved.
             </div>
-            <div className="text-terminal-gray mt-2">Owner: Ervin Remus Radosavljevici</div>
+            <div className="text-terminal-gray mt-2">Owner: Ervin Remus Radosavlevici</div>
             <div className="text-terminal-gray">DOB: 01/09/1987</div>
             <div className="text-terminal-gray">Email: ervin210@icloud.com</div>
             <div className="text-terminal-gray">System Version: 4.0</div>

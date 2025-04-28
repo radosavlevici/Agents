@@ -5,7 +5,7 @@ const LeftPanel = () => {
       <div className="text-terminal-cyan mb-3">V4.0 INITIALIZED</div>
       <div className="text-terminal-purple mb-1">Copyright © Ervin</div>
       <div className="text-terminal-purple mb-1">Remus</div>
-      <div className="text-terminal-purple mb-1">Radosavljevici</div>
+      <div className="text-terminal-purple mb-1">Radosavlevici</div>
       <div className="text-terminal-purple mb-1">(01/09/1987)</div>
       <div className="text-terminal-purple mb-1">Email:</div>
       <div className="text-terminal-green mb-3">ervin210@icloud.com</div>
