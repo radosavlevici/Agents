@@ -57,7 +57,7 @@ export async function sendMessageToOpenAI(message: string): Promise<string> {
   }
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
@@ -76,16 +76,40 @@ export async function sendMessageToOpenAI(message: string): Promise<string> {
   }
 }
 
+// Exported function to check if AI services are available
+export const aiServicesStatus = {
+  anthropic: hasAnthropicKey,
+  openai: hasOpenAIKey,
+  get anyAvailable() { 
+    return this.anthropic || this.openai;
+  }
+};
+
 // Function to select AI service based on query or preference
 export async function getAIResponse(message: string, preferredService?: 'anthropic' | 'openai'): Promise<string> {
-  // Default to Anthropic for security-related queries, OpenAI for general queries
+  // Check if any AI services are available
+  if (!aiServicesStatus.anyAvailable) {
+    return "AI services are not available. Please ensure either Anthropic or OpenAI API keys are properly configured.";
+  }
+
+  // Default to available service if requested service is not available
+  if (preferredService === 'anthropic' && !hasAnthropicKey) {
+    preferredService = hasOpenAIKey ? 'openai' : undefined;
+  } else if (preferredService === 'openai' && !hasOpenAIKey) {
+    preferredService = hasAnthropicKey ? 'anthropic' : undefined;
+  }
+
+  // If no preferred service specified, select based on availability and query content
   if (!preferredService) {
     const securityKeywords = ['security', 'privacy', 'protect', 'hack', 'breach', 'scan', 'threat'];
+    const securityRelated = securityKeywords.some(keyword => message.toLowerCase().includes(keyword));
     
-    if (securityKeywords.some(keyword => message.toLowerCase().includes(keyword))) {
+    if (hasAnthropicKey && (securityRelated || !hasOpenAIKey)) {
       preferredService = 'anthropic';  // Claude is particularly good with security topics
-    } else {
+    } else if (hasOpenAIKey) {
       preferredService = 'openai';     // GPT for general queries
+    } else {
+      preferredService = 'anthropic';  // Fallback to first option
     }
   }
   

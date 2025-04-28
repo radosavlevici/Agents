@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { getAIResponse } from "@/lib/aiServices";
+import { getAIResponse, aiServicesStatus } from "@/lib/aiServices";
 
 export default function TerminalAssistant() {
   const [input, setInput] = useState("");
@@ -119,8 +119,37 @@ export default function TerminalAssistant() {
     }, 3000);
   };
 
+  // Initialize AI assistants based on available API keys
+  useEffect(() => {
+    setAiAssistants({
+      anthropic: aiServicesStatus.anthropic,
+      openai: aiServicesStatus.openai
+    });
+  }, []);
+
   // Function to activate AI assistants
   const activateAIAssistant = (assistantType: 'anthropic' | 'openai') => {
+    // Check if service is available
+    const serviceAvailable = assistantType === 'anthropic' 
+      ? aiServicesStatus.anthropic 
+      : aiServicesStatus.openai;
+    
+    if (!serviceAvailable) {
+      const errorMessage = `${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'} service is not available. The API key is missing or invalid.`;
+      toast({
+        title: `${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'} Activation Failed`,
+        description: errorMessage,
+        variant: "destructive"
+      });
+      
+      setMessages(prev => [
+        ...prev,
+        { text: errorMessage, isUser: false }
+      ]);
+      return false;
+    }
+    
+    // Activate if service is available
     setAiAssistants(prev => ({ ...prev, [assistantType]: true }));
     
     toast({
@@ -135,25 +164,53 @@ export default function TerminalAssistant() {
         isUser: false
       }
     ]);
+    return true;
   };
 
   // Handle switching active assistants
   const switchAssistant = (assistantType: 'anthropic' | 'openai' | 'quantum') => {
+    // For Quantum assistant, we can always switch
+    if (assistantType === 'quantum') {
+      setActiveAssistant('quantum');
+      toast({
+        title: 'Switched to Quantum AI',
+        description: 'Your assistant is now powered by Quantum Terminal AI.',
+      });
+      return true;
+    }
+    
+    // For external AI services, we need to check if they're available
+    const serviceAvailable = assistantType === 'anthropic' 
+      ? aiServicesStatus.anthropic 
+      : aiServicesStatus.openai;
+    
+    if (!serviceAvailable) {
+      toast({
+        title: `Cannot Switch to ${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'}`,
+        description: `The ${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'} service is not available. The API key is missing or invalid.`,
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // If the service is available but not activated, activate it
     if ((assistantType === 'anthropic' && !aiAssistants.anthropic) || 
         (assistantType === 'openai' && !aiAssistants.openai)) {
       
-      // Activate the assistant if not already active
-      if (assistantType === 'anthropic' || assistantType === 'openai') {
-        activateAIAssistant(assistantType);
-      }
+      // Try to activate the assistant if not already active
+      const activated = activateAIAssistant(assistantType);
+      if (!activated) return false;
     }
     
+    // Switch to the requested assistant
     setActiveAssistant(assistantType);
     
     toast({
-      title: `Switched to ${assistantType === 'anthropic' ? 'Claude AI' : assistantType === 'openai' ? 'GPT AI' : 'Quantum AI'}`,
-      description: `Your assistant is now powered by ${assistantType === 'anthropic' ? 'Anthropic Claude' : assistantType === 'openai' ? 'OpenAI GPT' : 'Quantum Terminal AI'}.`,
+      title: `Switched to ${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'}`,
+      description: `Your assistant is now powered by ${assistantType === 'anthropic' ? 'Anthropic Claude' : 'OpenAI GPT'}.`,
     });
+    
+    return true;
   };
 
   const handleSendMessage = async () => {
@@ -164,17 +221,22 @@ export default function TerminalAssistant() {
     
     // Check for AI connection keywords
     if (input.toLowerCase().includes("use claude") || input.toLowerCase().includes("anthropic") || input.toLowerCase().includes("use claude ai")) {
-      activateAIAssistant('anthropic');
-      switchAssistant('anthropic');
-      setInput("");
-      return;
+      if (switchAssistant('anthropic')) {
+        setInput("");
+        return;
+      }
     } else if (input.toLowerCase().includes("use gpt") || input.toLowerCase().includes("openai") || input.toLowerCase().includes("use gpt ai")) {
-      activateAIAssistant('openai');
-      switchAssistant('openai');
-      setInput("");
-      return;
+      if (switchAssistant('openai')) {
+        setInput("");
+        return;
+      }
     } else if (input.toLowerCase().includes("use quantum") || input.toLowerCase().includes("switch to quantum")) {
       switchAssistant('quantum');
+      setInput("");
+      return;
+    } else if (input.toLowerCase().includes("ai status") || input.toLowerCase().includes("check ai") || input.toLowerCase().includes("ai services")) {
+      const statusMsg = `AI Services Status:\n- Quantum AI: Available and Active\n- Claude AI (Anthropic): ${aiServicesStatus.anthropic ? 'Available' : 'Not Available (API key missing)'}\n- GPT AI (OpenAI): ${aiServicesStatus.openai ? 'Available' : 'Not Available (API key missing)'}`;
+      setMessages(prev => [...prev, {text: statusMsg, isUser: false}]);
       setInput("");
       return;
     }
