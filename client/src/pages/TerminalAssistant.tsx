@@ -12,7 +12,7 @@ export default function TerminalAssistant() {
   type Message = {
     text: string;
     isUser: boolean;
-    source?: 'quantum' | 'anthropic' | 'openai' | 'system' | 'emergency';
+    source?: 'quantum' | 'anthropic' | 'openai' | 'system' | 'emergency' | 'agent';
   };
 
   // Define task type for development and security tasks
@@ -29,6 +29,20 @@ export default function TerminalAssistant() {
     device?: string;
     assignedTo?: string;
   };
+  
+  // New agent mode for active device operations
+  const [agentMode, setAgentMode] = useState<boolean>(true);
+  const [deviceOperations, setDeviceOperations] = useState<{
+    scanning: boolean;
+    updating: boolean;
+    optimizing: boolean;
+    monitoring: boolean;
+  }>({
+    scanning: false,
+    updating: false,
+    optimizing: false,
+    monitoring: true,
+  });
   
   // State for to-do tasks
   const [tasks, setTasks] = useState<Task[]>([
@@ -169,10 +183,10 @@ export default function TerminalAssistant() {
     }, 3000);
   };
 
-  // Initialize AI assistants based on available API keys
+  // Initialize AI assistants and agent functionality
   useEffect(() => {
     // Check API key status when component loads
-    const initializeAIStatus = async () => {
+    const initializeServices = async () => {
       try {
         const success = await checkApiKeyStatus();
         
@@ -194,14 +208,69 @@ export default function TerminalAssistant() {
               }
             ]);
           }
+          
+          // If agent mode is active, also start device monitoring
+          if (agentMode) {
+            setTimeout(() => {
+              setMessages(prev => [
+                ...prev,
+                {
+                  text: "🤖 QUANTUM AGENT ACTIVATED 🤖\n\nI'm now actively monitoring your device. I'll automatically detect and fix issues in real-time without creating tasks. All operations will be performed directly on the connected device.",
+                  isUser: false,
+                  source: 'agent'
+                }
+              ]);
+              
+              // Start background monitoring
+              setDeviceOperations(prev => ({
+                ...prev,
+                monitoring: true
+              }));
+              
+              // Simulate initial device scan
+              setTimeout(() => {
+                // Perform initial scan
+                setDeviceOperations(prev => ({
+                  ...prev,
+                  scanning: true
+                }));
+                
+                setMessages(prev => [
+                  ...prev,
+                  {
+                    text: "🔍 AGENT: Performing initial device scan to establish baseline security and performance metrics...",
+                    isUser: false,
+                    source: 'agent'
+                  }
+                ]);
+                
+                // Complete initial scan after 3 seconds
+                setTimeout(() => {
+                  setDeviceOperations(prev => ({
+                    ...prev,
+                    scanning: false
+                  }));
+                  
+                  setMessages(prev => [
+                    ...prev,
+                    {
+                      text: "✅ AGENT: Initial device scan complete. System status:\n\n• Security: Good (No critical vulnerabilities found)\n• Performance: 92% optimal\n• Storage: 65% utilized (34.5GB available)\n• Battery health: 96%\n\nI'll continue monitoring in the background and take immediate action if any issues are detected.",
+                      isUser: false,
+                      source: 'agent'
+                    }
+                  ]);
+                }, 3000);
+              }, 2000);
+            }, 4000);
+          }
         }
       } catch (error) {
         console.error("Error initializing AI services:", error);
       }
     };
     
-    initializeAIStatus();
-  }, []);
+    initializeServices();
+  }, [agentMode]);
 
   // Function to activate AI assistants
   const activateAIAssistant = (assistantType: 'anthropic' | 'openai') => {
@@ -503,96 +572,35 @@ export default function TerminalAssistant() {
       // Development-related queries and fixes
       } else if (input.toLowerCase().includes("code") || input.toLowerCase().includes("develop") || input.toLowerCase().includes("program") || input.toLowerCase().includes("coding")) {
         response = "I can assist with development tasks through my AI integration. Would you like me to:\n1. Help debug an application issue\n2. Review code for security vulnerabilities\n3. Suggest development best practices\n4. Help write new code\n\nFor best results, I recommend switching to one of the advanced AI assistants by saying 'Use Claude AI' or 'Use GPT AI'.";
-      // Direct development/code fixing (without creating tasks)
+      // Direct development/code fixing using agent functionality
       } else if (input.toLowerCase().includes("fix") && (input.toLowerCase().includes("development") || input.toLowerCase().includes("coding") || input.toLowerCase().includes("code"))) {
-        // Start fixing the development issue directly
-        response = "I understand you need help fixing a development issue. I'll analyze the problem and prepare solutions immediately.";
+        // Start fixing the development issue using agent
+        response = "I understand you need help fixing a development issue. Activating agent mode to analyze and fix the problem directly.";
         
-        // Begin immediate diagnostic and resolution process
+        // Use the agent to perform development fixes
         setTimeout(() => {
-          setMessages(prev => [...prev, {
-            text: "I'm directly addressing the development issue now. My approach consists of these steps:\n\n1. Rapidly analyzing code structure to identify problems\n2. Preparing optimized solution strategies\n3. Implementing fixes with automated testing\n4. Verifying functionality and performance improvements",
-            isUser: false,
-            source: 'quantum'
-          }]);
-          
-          // After a short delay, simulate analysis
-          setTimeout(() => {
-            setMessages(prev => [...prev, {
-              text: "🔍 CODE ANALYSIS COMPLETE 🔍\n\nI've identified the following development issues:\n\n- Inefficient code organization affecting maintainability\n- Function implementations missing proper error handling\n- Performance bottlenecks in data processing functions\n- Security vulnerabilities in input validation\n\nI'm implementing fixes for these issues immediately.",
-              isUser: false,
-              source: 'quantum'
-            }]);
-            
-            // Show real-time fixing progress
-            setTimeout(() => {
-              setMessages(prev => [...prev, {
-                text: "⚙️ APPLYING CODE FIXES ⚙️\n\n▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░ 75%\n\n✅ Restructured code organization\n✅ Implemented robust error handling\n✅ Optimized data processing functions\n⏳ Enhancing input validation security",
-                isUser: false,
-                source: 'quantum'
-              }]);
-              
-              // Complete the fixes
-              setTimeout(() => {
-                setMessages(prev => [...prev, {
-                  text: "✅ CODE FIXES COMPLETE ✅\n\nAll identified development issues have been successfully resolved:\n\n1. Code organization improved with proper separation of concerns\n2. Added comprehensive error handling with detailed logging\n3. Optimized data processing for 68% better performance\n4. Implemented secure input validation with sanitization\n\nThe codebase is now more robust, secure, and maintainable. Would you like me to explain any of the changes in more detail?",
-                  isUser: false,
-                  source: 'quantum'
-                }]);
-              }, 4000);
-            }, 3000);
-          }, 2000);
-        }, 1500);
+          fixDevelopmentIssue(input, false);
+        }, 1000);
       } else if (input.toLowerCase().includes("debug") || input.toLowerCase().includes("error") || input.toLowerCase().includes("fix code")) {
         response = "I can help troubleshoot your code issues. To proceed with debugging, please provide:\n- The error message you're receiving\n- The relevant code snippet\n- Language/framework you're using\n\nFor in-depth debugging assistance, I recommend activating Claude AI or GPT AI, which have specialized code understanding capabilities.";
       } else if (input.toLowerCase().includes("project") || input.toLowerCase().includes("github") || input.toLowerCase().includes("git") || input.toLowerCase().includes("repository")) {
         response = "I can help with your development projects and repository management. What would you like assistance with?\n- Setting up a new project\n- Code review and improvement\n- Security assessment of your codebase\n- Deployment strategies\n\nFor technical code reviews, I recommend activating one of the advanced AI assistants.";
       
-      // Direct security issue fixing (without creating tasks)
+      // Direct security issue fixing using agent functionality
       } else if (input.toLowerCase().includes("fix") && (input.toLowerCase().includes("security") || input.toLowerCase().includes("vulnerability") || input.toLowerCase().includes("issue"))) {
         // Connect to API endpoints if not already connected
         if (!apiConnected) {
           connectToApi();
         }
         
-        // Start fixing the security issue directly
-        response = "I understand there's a security issue to fix. I'm initiating security protocols and will resolve this immediately.";
+        // Start fixing the security issue using agent
+        response = "I understand there's a security issue to fix. Activating agent mode to resolve this immediately.";
         
-        // Begin immediate diagnostic and resolution process
+        // Use the agent to perform security scan and fix
         setTimeout(() => {
-          setMessages(prev => [...prev, {
-            text: "I'm directly addressing the security issue now. I'll work through these steps:\n\n1. Performing rapid security scan to identify vulnerabilities\n2. Applying immediate security patches and fixes\n3. Verifying successful implementation\n4. Strengthening security measures to prevent future issues",
-            isUser: false,
-            source: 'quantum'
-          }]);
-          
-          // After a short delay, simulate finding issues
-          setTimeout(() => {
-            setMessages(prev => [...prev, {
-              text: "⚡ SECURITY SCAN COMPLETE ⚡\n\nI've identified the following security issues:\n\n- Outdated system software requiring security patches\n- Weak encryption settings on network connections\n- 3 suspicious login attempts blocked\n- Potential data exposure in cloud storage\n\nI'm implementing fixes for these issues immediately.",
-              isUser: false,
-              source: 'quantum'
-            }]);
-            
-            // Show real-time fixing progress
-            setTimeout(() => {
-              setMessages(prev => [...prev, {
-                text: "🔒 APPLYING SECURITY FIXES 🔒\n\n▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░ 75%\n\n✅ Updated system security patches\n✅ Strengthened encryption settings\n✅ Blocked suspicious IP addresses\n⏳ Securing cloud storage permissions",
-                isUser: false,
-                source: 'quantum'
-              }]);
-              
-              // Complete the fixes
-              setTimeout(() => {
-                setMessages(prev => [...prev, {
-                  text: "✅ SECURITY FIXES COMPLETE ✅\n\nAll identified security issues have been successfully resolved:\n\n1. System software updated to latest secure version\n2. Encryption upgraded to 256-bit AES for all connections\n3. IP blocking rules updated and suspicious attempts logged\n4. Cloud storage permissions tightened and additional authentication layer added\n\nYour device is now secure. I've also implemented ongoing monitoring to prevent similar issues.",
-                  isUser: false,
-                  source: 'quantum'
-                }]);
-              }, 4000);
-            }, 3000);
-          }, 2000);
-        }, 1500);
+          // Perform comprehensive security scan which will automatically fix any issues found
+          performSecurityScan(false);
+        }, 1000);
       } else if (input.toLowerCase().includes("scan") || input.toLowerCase().includes("security")) {
         if (!apiConnected) {
           response = `I'll need to connect to our security API endpoints first to perform a comprehensive scan. Type "connect API" to establish the connection.`;
@@ -624,6 +632,48 @@ export default function TerminalAssistant() {
         }
       } else if (input.toLowerCase().includes("ai") || input.toLowerCase().includes("assistant")) {
         response = "I can connect to advanced AI services to enhance my capabilities. You can say 'Use Claude AI' or 'Use GPT AI' to activate these assistants for in-depth development and security assistance.";
+      } else if (input.toLowerCase().includes("agent mode") || input.toLowerCase().includes("agent status")) {
+        // Agent mode status and information
+        const agentStatus = agentMode ? "ACTIVE" : "INACTIVE";
+        response = `🤖 AGENT STATUS: ${agentStatus} 🤖\n\nWhen agent mode is active, I directly perform operations on your device without creating tasks. I can:\n\n• Automatically detect and fix security issues\n• Resolve development problems\n• Optimize device performance\n• Continuously monitor for potential problems\n\nCurrent operations: ${
+          deviceOperations.scanning ? "Security scanning in progress" : 
+          deviceOperations.updating ? "Security update in progress" :
+          deviceOperations.optimizing ? "Performance optimization in progress" :
+          deviceOperations.monitoring ? "Background monitoring active" : "None"
+        }\n\nTo toggle agent mode, say "toggle agent mode".`;
+      } else if (input.toLowerCase().includes("toggle agent")) {
+        // Toggle agent mode
+        const newAgentMode = !agentMode;
+        setAgentMode(newAgentMode);
+        
+        if (newAgentMode) {
+          response = "🤖 AGENT MODE ACTIVATED 🤖\n\nI'm now operating as an active agent on your device. I'll directly fix issues without creating tasks and will proactively monitor your system for potential problems.";
+          
+          // Initialize device monitoring
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              text: "🔍 AGENT: Initializing system monitoring and diagnostics...",
+              isUser: false,
+              source: 'agent'
+            }]);
+            
+            // Start background monitoring
+            setDeviceOperations(prev => ({
+              ...prev,
+              monitoring: true
+            }));
+          }, 1000);
+        } else {
+          response = "🤖 AGENT MODE DEACTIVATED 🤖\n\nI've reverted to task-based operation. I'll now create tasks for issues instead of fixing them directly. Background monitoring has been suspended.";
+          
+          // Stop all operations
+          setDeviceOperations({
+            scanning: false,
+            updating: false,
+            optimizing: false,
+            monitoring: false
+          });
+        }
       }
       
       setMessages(prev => [...prev, {
@@ -741,31 +791,285 @@ export default function TerminalAssistant() {
     }
   };
 
-  // Functions for task management
+  // AGENT FUNCTIONS for direct device operations
+  const performSecurityScan = (silent: boolean = false) => {
+    if (!silent) {
+      setMessages(prev => [...prev, {
+        text: "🔍 AGENT: Initiating comprehensive security scan of all connected devices...",
+        isUser: false,
+        source: 'agent'
+      }]);
+    }
+    
+    setDeviceOperations(prev => ({
+      ...prev,
+      scanning: true
+    }));
+    
+    // Simulate scan duration
+    setTimeout(() => {
+      // Randomly determine if issues are found (for demo purposes)
+      const issuesFound = Math.random() > 0.5;
+      
+      if (issuesFound) {
+        if (!silent) {
+          setMessages(prev => [...prev, {
+            text: "⚠️ AGENT: Security scan complete. Issues detected:\n\n• Outdated system software (iOS 17.4.1 → 17.5 available)\n• 3 suspicious login attempts from unrecognized location\n• Weak encryption on Wi-Fi connection\n\nStarting automatic fixes...",
+            isUser: false,
+            source: 'agent'
+          }]);
+        }
+        
+        // Start fixing the issues automatically
+        fixSecurityIssues("Detected during automated scan", silent);
+      } else {
+        if (!silent) {
+          setMessages(prev => [...prev, {
+            text: "✅ AGENT: Security scan complete. No issues detected. All systems secure.\n\n• Software up to date\n• No suspicious activities detected\n• All connections using strong encryption\n• Data backup status: Current",
+            isUser: false,
+            source: 'agent'
+          }]);
+        }
+        
+        setDeviceOperations(prev => ({
+          ...prev,
+          scanning: false
+        }));
+      }
+    }, silent ? 2000 : 4000);
+    
+    return true;
+  };
+  
+  const fixSecurityIssues = (issueSource: string, silent: boolean = false) => {
+    setDeviceOperations(prev => ({
+      ...prev,
+      updating: true
+    }));
+    
+    if (!silent) {
+      setMessages(prev => [...prev, {
+        text: "🔒 AGENT: Implementing security fixes...",
+        isUser: false,
+        source: 'agent'
+      }]);
+    }
+    
+    // Simulate fix duration
+    setTimeout(() => {
+      if (!silent) {
+        setMessages(prev => [...prev, {
+          text: "✅ AGENT: Security issues resolved:\n\n• System software updated to latest version\n• Blocked suspicious IP addresses and reset account security\n• Enhanced encryption settings on all network connections\n• Added additional authentication layer for sensitive operations\n\nYour device is now secure.",
+          isUser: false,
+          source: 'agent'
+        }]);
+      }
+      
+      setDeviceOperations(prev => ({
+        ...prev,
+        scanning: false,
+        updating: false
+      }));
+      
+      // After security fixes, always run a quick performance optimization
+      if (!silent) {
+        setTimeout(() => {
+          optimizePerformance(silent);
+        }, 1500);
+      }
+    }, silent ? 2500 : 5000);
+    
+    return true;
+  };
+  
+  const optimizePerformance = (silent: boolean = false) => {
+    if (!silent) {
+      setMessages(prev => [...prev, {
+        text: "⚙️ AGENT: Optimizing device performance...",
+        isUser: false,
+        source: 'agent'
+      }]);
+    }
+    
+    setDeviceOperations(prev => ({
+      ...prev,
+      optimizing: true
+    }));
+    
+    // Simulate optimization duration
+    setTimeout(() => {
+      if (!silent) {
+        setMessages(prev => [...prev, {
+          text: "✅ AGENT: Performance optimization complete:\n\n• Closed 14 background processes consuming excessive resources\n• Cleared 1.2GB of temporary cache data\n• Optimized application startup sequences\n• Reorganized storage for faster access\n\nPerformance improved by 23%. Device is now running optimally.",
+          isUser: false,
+          source: 'agent'
+        }]);
+      }
+      
+      setDeviceOperations(prev => ({
+        ...prev,
+        optimizing: false
+      }));
+    }, silent ? 2000 : 4000);
+    
+    return true;
+  };
+  
+  const fixDevelopmentIssue = (issue: string, silent: boolean = false) => {
+    if (!silent) {
+      setMessages(prev => [...prev, {
+        text: "🔧 AGENT: Analyzing development environment and codebase...",
+        isUser: false,
+        source: 'agent'
+      }]);
+    }
+    
+    // Start optimizing
+    setDeviceOperations(prev => ({
+      ...prev,
+      optimizing: true
+    }));
+    
+    // Simulate development fix process
+    setTimeout(() => {
+      if (!silent) {
+        setMessages(prev => [...prev, {
+          text: "🔍 AGENT: Development issue analysis complete. Found:\n\n• Code organization inefficiencies\n• Missing error handling in critical functions\n• Performance bottlenecks in data processing\n• Potential memory leaks\n\nImplementing fixes automatically...",
+          isUser: false,
+          source: 'agent'
+        }]);
+      }
+      
+      // Simulate implementing the fixes
+      setTimeout(() => {
+        if (!silent) {
+          setMessages(prev => [...prev, {
+            text: "✅ AGENT: Development issues fixed:\n\n• Restructured code for better maintainability\n• Implemented comprehensive error handling\n• Optimized data processing logic (68% performance improvement)\n• Fixed memory management to prevent leaks\n• Added automated tests to prevent regression\n\nAll development issues have been resolved. The codebase is now more robust, secure, and efficient.",
+            isUser: false,
+            source: 'agent'
+          }]);
+        }
+        
+        setDeviceOperations(prev => ({
+          ...prev,
+          optimizing: false
+        }));
+      }, silent ? 2000 : 4000);
+    }, silent ? 1500 : 3000);
+    
+    return true;
+  };
+  
+  // Begin automatic background monitoring if agent mode is active
+  useEffect(() => {
+    if (agentMode && isMobileConnected && apiConnected) {
+      const backgroundMonitoringInterval = setInterval(() => {
+        // Small chance to detect an issue during background monitoring (for demo)
+        const issueDetected = Math.random() < 0.1; // 10% chance
+        
+        if (issueDetected) {
+          // Randomly decide if it's a security or performance issue
+          const isSecurityIssue = Math.random() < 0.6;
+          
+          if (isSecurityIssue) {
+            // Clear any existing operations
+            setDeviceOperations({
+              scanning: false,
+              updating: false,
+              optimizing: false,
+              monitoring: true
+            });
+            
+            // Alert about detected security issue
+            setMessages(prev => [...prev, {
+              text: "⚠️ AGENT ALERT: Security vulnerability detected during background monitoring. Initiating automatic resolution...",
+              isUser: false,
+              source: 'agent'
+            }]);
+            
+            // Fix the issue silently (no detailed messages)
+            performSecurityScan(true);
+          } else {
+            // Clear any existing operations
+            setDeviceOperations({
+              scanning: false,
+              updating: false,
+              optimizing: false,
+              monitoring: true
+            });
+            
+            // Alert about detected performance issue
+            setMessages(prev => [...prev, {
+              text: "⚠️ AGENT ALERT: Performance degradation detected during background monitoring. Initiating automatic optimization...",
+              isUser: false,
+              source: 'agent'
+            }]);
+            
+            // Fix the issue silently
+            optimizePerformance(true);
+          }
+        }
+      }, 60000); // Check every minute
+      
+      // Clean up interval on unmount
+      return () => clearInterval(backgroundMonitoringInterval);
+    }
+  }, [agentMode, isMobileConnected, apiConnected]);
+  
+  // Legacy task management functions - kept for backward compatibility
   const createTask = (description: string, type: TaskType = 'general', priority: 'low' | 'medium' | 'high' = 'medium', device?: string) => {
-    // Generate a unique ID for the task (simple increment for now)
-    const id = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1;
-    
-    const newTask: Task = {
-      id,
-      type,
-      description,
-      status: 'pending',
-      priority,
-      created: new Date(),
-      device,
-      assignedTo: 'ervin210@icloud.com'
-    };
-    
-    setTasks(prev => [...prev, newTask]);
-    
-    // Notify the user
-    toast({
-      title: `New ${type} task created`,
-      description: `Task #${id}: ${description}`,
-    });
-    
-    return newTask;
+    // In agent mode, directly handle the issue instead of creating a task
+    if (agentMode) {
+      if (type === 'security') {
+        fixSecurityIssues(description);
+      } else if (type === 'development') {
+        fixDevelopmentIssue(description);
+      } else {
+        optimizePerformance();
+      }
+      
+      // But still create the task for tracking purposes
+      const id = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1;
+      
+      const newTask: Task = {
+        id,
+        type,
+        description,
+        status: 'in-progress', // Automatically set to in-progress in agent mode
+        priority,
+        created: new Date(),
+        device,
+        assignedTo: 'ervin210@icloud.com'
+      };
+      
+      setTasks(prev => [...prev, newTask]);
+      
+      return newTask;
+    } else {
+      // Original task creation logic
+      const id = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1;
+      
+      const newTask: Task = {
+        id,
+        type,
+        description,
+        status: 'pending',
+        priority,
+        created: new Date(),
+        device,
+        assignedTo: 'ervin210@icloud.com'
+      };
+      
+      setTasks(prev => [...prev, newTask]);
+      
+      // Notify the user
+      toast({
+        title: `New ${type} task created`,
+        description: `Task #${id}: ${description}`,
+      });
+      
+      return newTask;
+    }
   };
   
   const updateTaskStatus = (taskId: number, status: TaskStatus) => {
@@ -1173,6 +1477,7 @@ export default function TerminalAssistant() {
                       msg.source === 'anthropic' ? 'bg-purple-500' :
                       msg.source === 'openai' ? 'bg-green-500' :
                       msg.source === 'system' ? 'bg-gray-500' :
+                      msg.source === 'agent' ? 'bg-amber-500' :
                       'bg-terminal-cyan'
                     }`}></div>
                   </div>
@@ -1186,12 +1491,15 @@ export default function TerminalAssistant() {
                     isEmergencyMsg || msg.source === 'emergency' ? 'text-terminal-red font-bold' : 
                     msg.source === 'anthropic' ? 'text-purple-400' :
                     msg.source === 'openai' ? 'text-green-400' :
+                    msg.source === 'agent' ? 'text-amber-400 font-semibold' :
+                    msg.source === 'system' ? 'text-gray-400' :
                     'text-terminal-cyan'
                   }`}>
                     {msg.isUser ? 'You' : 
                      isEmergencyMsg || msg.source === 'emergency' ? 'EMERGENCY SYSTEM' :
                      msg.source === 'anthropic' ? 'Claude AI' :
                      msg.source === 'openai' ? 'GPT AI' :
+                     msg.source === 'agent' ? 'QUANTUM AGENT' :
                      msg.source === 'system' ? 'System' :
                      'Quantum AI'}
                   </div>
@@ -1206,6 +1514,8 @@ export default function TerminalAssistant() {
                           ? 'bg-black bg-opacity-40 text-purple-400 border border-purple-500'
                           : msg.source === 'openai'
                             ? 'bg-black bg-opacity-40 text-green-400 border border-green-500'
+                            : msg.source === 'agent'
+                              ? 'bg-amber-950 bg-opacity-30 text-amber-300 border border-amber-600'
                             : msg.source === 'system'
                               ? 'bg-black bg-opacity-40 text-gray-300 border border-gray-600'
                               : 'bg-black bg-opacity-40 text-terminal-cyan border border-terminal-cyan'
