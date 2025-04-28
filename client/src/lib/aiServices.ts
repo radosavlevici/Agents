@@ -102,20 +102,47 @@ export async function getAIResponse(message: string, preferredService?: 'anthrop
   // If no preferred service specified, select based on availability and query content
   if (!preferredService) {
     const securityKeywords = ['security', 'privacy', 'protect', 'hack', 'breach', 'scan', 'threat'];
-    const securityRelated = securityKeywords.some(keyword => message.toLowerCase().includes(keyword));
+    const dataAnalysisKeywords = ['analyze', 'data', 'statistics', 'pattern', 'insight'];
     
-    if (hasAnthropicKey && (securityRelated || !hasOpenAIKey)) {
+    const isSecurityRelated = securityKeywords.some(keyword => message.toLowerCase().includes(keyword));
+    const isDataAnalysisRelated = dataAnalysisKeywords.some(keyword => message.toLowerCase().includes(keyword));
+    
+    if (hasAnthropicKey && (isSecurityRelated || !hasOpenAIKey)) {
       preferredService = 'anthropic';  // Claude is particularly good with security topics
+    } else if (hasOpenAIKey && (isDataAnalysisRelated || !hasAnthropicKey)) {
+      preferredService = 'openai';     // GPT for data analysis and general queries
+    } else if (hasAnthropicKey) {
+      preferredService = 'anthropic';  // Default to Anthropic if available
     } else if (hasOpenAIKey) {
-      preferredService = 'openai';     // GPT for general queries
+      preferredService = 'openai';     // Default to OpenAI if Anthropic not available
     } else {
-      preferredService = 'anthropic';  // Fallback to first option
+      return "No AI services are available. Please configure at least one API key.";
     }
   }
   
-  if (preferredService === 'anthropic') {
-    return sendMessageToAntropic(message);
-  } else {
-    return sendMessageToOpenAI(message);
+  // Call the appropriate AI service
+  try {
+    if (preferredService === 'anthropic') {
+      return await sendMessageToAntropic(message);
+    } else {
+      return await sendMessageToOpenAI(message);
+    }
+  } catch (error) {
+    console.error(`Error using ${preferredService} service:`, error);
+    
+    // Try fallback if primary service fails
+    try {
+      if (preferredService === 'anthropic' && hasOpenAIKey) {
+        console.log("Falling back to OpenAI service...");
+        return await sendMessageToOpenAI(message);
+      } else if (preferredService === 'openai' && hasAnthropicKey) {
+        console.log("Falling back to Anthropic service...");
+        return await sendMessageToAntropic(message);
+      }
+    } catch (fallbackError) {
+      console.error("Fallback service also failed:", fallbackError);
+    }
+    
+    return `There was an error processing your request with the ${preferredService === 'anthropic' ? 'Claude AI' : 'GPT AI'} service. ${hasAnthropicKey && hasOpenAIKey ? 'I tried using the alternative AI service as a fallback, but it also failed.' : ''}`;
   }
 }

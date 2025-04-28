@@ -461,43 +461,55 @@ export default function TerminalAssistant() {
             
             {/* AI Services Control Panel */}
             {!emergencyMode && (
-              <div className="flex items-center justify-between mt-2 bg-black/30 p-2 rounded border border-gray-700">
-                <div className="text-xs text-terminal-gray font-semibold">AI Services:</div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={activeAssistant === 'quantum' ? "default" : "outline"}
-                    className={`text-xs ${activeAssistant === 'quantum' ? 'bg-terminal-cyan text-black' : 'border-terminal-cyan text-terminal-cyan'}`}
-                    onClick={() => switchAssistant('quantum')}
-                  >
-                    Quantum AI
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={activeAssistant === 'anthropic' ? "default" : "outline"}
-                    className={`text-xs ${activeAssistant === 'anthropic' ? 'bg-purple-500 text-white' : 'border-purple-500 text-purple-400'}`}
-                    onClick={() => {
-                      if (!aiAssistants.anthropic) {
-                        activateAIAssistant('anthropic');
-                      }
-                      switchAssistant('anthropic');
-                    }}
-                  >
-                    Claude AI {aiAssistants.anthropic ? '✓' : ''}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={activeAssistant === 'openai' ? "default" : "outline"}
-                    className={`text-xs ${activeAssistant === 'openai' ? 'bg-green-500 text-white' : 'border-green-500 text-green-400'}`}
-                    onClick={() => {
-                      if (!aiAssistants.openai) {
-                        activateAIAssistant('openai');
-                      }
-                      switchAssistant('openai');
-                    }}
-                  >
-                    GPT AI {aiAssistants.openai ? '✓' : ''}
-                  </Button>
+              <div className="flex flex-col mt-2 bg-black/30 p-2 rounded border border-gray-700">
+                <div className="flex justify-between items-center">
+                  <div className="text-xs text-terminal-gray font-semibold">AI Services:</div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={activeAssistant === 'quantum' ? "default" : "outline"}
+                      className={`text-xs ${activeAssistant === 'quantum' ? 'bg-terminal-cyan text-black' : 'border-terminal-cyan text-terminal-cyan'}`}
+                      onClick={() => switchAssistant('quantum')}
+                    >
+                      Quantum AI
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={activeAssistant === 'anthropic' ? "default" : "outline"}
+                      className={`text-xs ${activeAssistant === 'anthropic' ? 'bg-purple-500 text-white' : 'border-purple-500 text-purple-400'}`}
+                      onClick={() => aiServicesStatus.anthropic ? switchAssistant('anthropic') : handleRequestApiKey('anthropic')}
+                    >
+                      Claude AI {aiServicesStatus.anthropic ? '✓' : '⚠️'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={activeAssistant === 'openai' ? "default" : "outline"}
+                      className={`text-xs ${activeAssistant === 'openai' ? 'bg-green-500 text-white' : 'border-green-500 text-green-400'}`}
+                      onClick={() => aiServicesStatus.openai ? switchAssistant('openai') : handleRequestApiKey('openai')}
+                    >
+                      GPT AI {aiServicesStatus.openai ? '✓' : '⚠️'}
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* AI Service Status Indicators */}
+                <div className="mt-3 flex items-center justify-start space-x-4">
+                  <div className="flex items-center">
+                    <div className={`h-2 w-2 rounded-full mr-1.5 bg-terminal-cyan`}></div>
+                    <span className="text-xs text-terminal-cyan">Quantum: Active</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className={`h-2 w-2 rounded-full mr-1.5 ${aiServicesStatus.anthropic ? 'bg-purple-500' : 'bg-gray-500'}`}></div>
+                    <span className={`text-xs ${aiServicesStatus.anthropic ? 'text-purple-400' : 'text-gray-500'}`}>
+                      Claude: {aiServicesStatus.anthropic ? 'Available' : 'No API Key'}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className={`h-2 w-2 rounded-full mr-1.5 ${aiServicesStatus.openai ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                    <span className={`text-xs ${aiServicesStatus.openai ? 'text-green-400' : 'text-gray-500'}`}>
+                      GPT: {aiServicesStatus.openai ? 'Available' : 'No API Key'}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
