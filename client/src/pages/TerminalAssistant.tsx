@@ -13,6 +13,17 @@ export default function TerminalAssistant() {
   const [isMobileConnected, setIsMobileConnected] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [securityLevel, setSecurityLevel] = useState("maximum");
+  const [emergencyMode, setEmergencyMode] = useState(false);
+  
+  // Device information
+  const deviceInfo = {
+    serialNumber: "D2VMW6RNW2",
+    modelNumber: "MU773ZD/A",
+    deviceType: "iPhone",
+    lastBackup: "Today, 14:32",
+    batteryStatus: "87%",
+    osVersion: "iOS 17.4.1"
+  };
   const { toast } = useToast();
 
   // Simulate connecting to iCloud
@@ -28,6 +39,36 @@ export default function TerminalAssistant() {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  // Handle emergency mode activation
+  const handleEmergencyMode = () => {
+    setEmergencyMode(true);
+    toast({
+      title: "EMERGENCY MODE ACTIVATED",
+      description: "Emergency protocols initiated. Contacting emergency services.",
+      variant: "destructive"
+    });
+    
+    // Add emergency message to chat
+    setMessages(prev => [
+      ...prev, 
+      {
+        text: "EMERGENCY MODE ACTIVATED. Location tracking enabled. Emergency contacts notified. Sending device information to emergency services.", 
+        isUser: false
+      }
+    ]);
+    
+    // Simulate emergency response
+    setTimeout(() => {
+      setMessages(prev => [
+        ...prev, 
+        {
+          text: `Device information sent: iPhone (${deviceInfo.modelNumber}), Serial: ${deviceInfo.serialNumber}. Approximate location data transmitted to emergency services.`, 
+          isUser: false
+        }
+      ]);
+    }, 3000);
+  };
+
   const handleSendMessage = () => {
     if (!input.trim()) return;
     
@@ -38,19 +79,30 @@ export default function TerminalAssistant() {
     setTimeout(() => {
       let response = "I'm processing your request. As your personal Quantum Assistant, I'm here to help with any tasks for ervin210@icloud.com.";
       
+      // Check for emergency keywords first
+      if (emergencyMode || input.toLowerCase().includes("emergency") || input.toLowerCase().includes("help") || input.toLowerCase().includes("sos")) {
+        if (!emergencyMode) {
+          setEmergencyMode(true);
+          response = "EMERGENCY MODE ACTIVATED. Sending your device information (iPhone MU773ZD/A, Serial: D2VMW6RNW2) and location to emergency services. Stay on this channel for updates.";
+        } else {
+          response = "Emergency services have been notified. Your location is being tracked. Please stay in place if possible. Help is on the way.";
+        }
+      }
       // Enhanced keyword matching for iCloud integration demonstration
-      if (input.toLowerCase().includes("email") || input.toLowerCase().includes("icloud")) {
+      else if (input.toLowerCase().includes("email") || input.toLowerCase().includes("icloud")) {
         response = "Your iCloud email (ervin210@icloud.com) is secure. Last login was from your usual location. No suspicious activities detected. Would you like me to scan for potential phishing attempts?";
-      } else if (input.toLowerCase().includes("phone") || input.toLowerCase().includes("mobile")) {
-        response = "Your mobile device is currently connected and secured. All 23 applications are up to date. Battery level is at 87%. Would you like me to run a security scan on your phone?";
+      } else if (input.toLowerCase().includes("phone") || input.toLowerCase().includes("mobile") || input.toLowerCase().includes("device")) {
+        response = `Your iPhone (${deviceInfo.modelNumber}, SN:${deviceInfo.serialNumber}) is currently connected and secured. Battery level is at ${deviceInfo.batteryStatus}. Running ${deviceInfo.osVersion}. Last backup: ${deviceInfo.lastBackup}. Would you like me to run a security scan?`;
       } else if (input.toLowerCase().includes("scan") || input.toLowerCase().includes("security")) {
-        response = "Initiating comprehensive security scan for all your devices linked to ervin210@icloud.com. This will check for vulnerabilities, malware, and unauthorized access attempts. I'll notify you when complete.";
+        response = `Initiating comprehensive security scan for your iPhone ${deviceInfo.modelNumber} and all devices linked to ervin210@icloud.com. This will check for vulnerabilities, malware, and unauthorized access attempts. I'll notify you when complete.`;
       } else if (input.toLowerCase().includes("alert") || input.toLowerCase().includes("warning")) {
         response = "You have 2 active security notices: 1) A new device logged into your Apple account from Los Angeles yesterday. 2) 3 failed login attempts on your iCloud Drive. Would you like me to lock down your account temporarily?";
       } else if (input.toLowerCase().includes("photos") || input.toLowerCase().includes("files")) {
         response = "Your iCloud storage is currently at 68% capacity. You have 1,247 photos, 86 videos, and 312 documents stored. Would you like me to analyze for duplicate files or suggest storage optimization?";
       } else if (input.toLowerCase().includes("backup") || input.toLowerCase().includes("sync")) {
-        response = "Your last iCloud backup was completed 6 hours ago. All devices are synced and up to date. Critical data is secured with end-to-end encryption.";
+        response = `Your last iCloud backup was completed at ${deviceInfo.lastBackup}. All devices are synced and up to date. Critical data is secured with end-to-end encryption.`;
+      } else if (input.toLowerCase().includes("serial") || input.toLowerCase().includes("model")) {
+        response = `Your device information:\nModel: ${deviceInfo.modelNumber}\nSerial Number: ${deviceInfo.serialNumber}\nDevice Type: ${deviceInfo.deviceType}\nOS Version: ${deviceInfo.osVersion}`;
       }
       
       setMessages(prev => [...prev, {text: response, isUser: false}]);
@@ -80,63 +132,116 @@ export default function TerminalAssistant() {
   return (
     <QuantumTerminalLayout title="Personal Assistant">
       <div className="flex flex-col h-[calc(100vh-300px)] max-h-[600px]">
-        <div className="bg-terminal-dark-bg p-4 rounded-t border border-gray-700">
+        <div className={`bg-terminal-dark-bg p-4 rounded-t border ${emergencyMode ? 'border-red-700 border-2' : 'border-gray-700'}`}>
           <div className="flex items-center justify-between mb-4">
-            <div className="text-terminal-cyan font-bold">QUANTUM ASSISTANT</div>
+            <div className="flex items-center gap-2">
+              <div className={`text-lg font-bold ${emergencyMode ? 'text-terminal-red animate-pulse' : 'text-terminal-cyan'}`}>
+                {emergencyMode ? 'EMERGENCY MODE' : 'QUANTUM ASSISTANT'}
+              </div>
+              {emergencyMode && (
+                <div className="bg-terminal-red px-2 py-1 rounded text-xs text-black animate-pulse">
+                  SOS ACTIVE
+                </div>
+              )}
+            </div>
             <div className="flex flex-col items-end">
               <div className="text-terminal-green text-sm">User: ervin210@icloud.com</div>
-              <div className={`text-xs ${isMobileConnected ? 'text-terminal-green' : 'text-terminal-amber'}`}>
-                {isMobileConnected ? 'iPhone Connected ✓' : 'Connecting to mobile...'}
+              <div className="flex items-center gap-1">
+                <div className={`text-xs ${isMobileConnected ? 'text-terminal-green' : 'text-terminal-amber'}`}>
+                  {isMobileConnected ? 'iPhone Connected ✓' : 'Connecting to mobile...'}
+                </div>
+                {isMobileConnected && (
+                  <div className="text-terminal-gray text-xs">
+                    ({deviceInfo.modelNumber}, SN:{deviceInfo.serialNumber})
+                  </div>
+                )}
               </div>
             </div>
           </div>
           
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="text-terminal-gray text-xs">Voice Commands:</div>
-              <Switch 
-                checked={voiceEnabled} 
-                onCheckedChange={handleToggleVoice} 
-                className="data-[state=checked]:bg-terminal-purple" 
-              />
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="text-terminal-gray text-xs">Voice Commands:</div>
+                <Switch 
+                  checked={voiceEnabled} 
+                  onCheckedChange={handleToggleVoice} 
+                  className="data-[state=checked]:bg-terminal-purple" 
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="border-terminal-cyan text-terminal-cyan hover:bg-terminal-cyan hover:bg-opacity-20 text-xs"
+                  onClick={() => {
+                    toast({
+                      title: "Mobile Sync Active",
+                      description: "The assistant will appear on your mobile device.",
+                    });
+                  }}
+                >
+                  Sync to iPhone
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-terminal-amber text-terminal-amber hover:bg-terminal-amber hover:bg-opacity-20 text-xs"
+                  onClick={handleActivateNotifications}
+                >
+                  Activate Notifications
+                </Button>
+              </div>
             </div>
             
-            <div className="flex gap-2">
+            {!emergencyMode && (
               <Button 
-                variant="outline" 
-                className="border-terminal-cyan text-terminal-cyan hover:bg-terminal-cyan hover:bg-opacity-20 text-xs"
-                onClick={() => {
-                  toast({
-                    title: "Mobile Sync Active",
-                    description: "The assistant will appear on your mobile device.",
-                  });
-                }}
+                variant="destructive"
+                onClick={handleEmergencyMode}
+                className="bg-terminal-red text-white hover:bg-terminal-red/80 font-bold text-sm"
               >
-                Sync to iPhone
+                EMERGENCY - PRESS FOR ASSISTANCE
               </Button>
-              <Button 
-                variant="outline" 
-                className="border-terminal-amber text-terminal-amber hover:bg-terminal-amber hover:bg-opacity-20 text-xs"
-                onClick={handleActivateNotifications}
-              >
-                Activate Notifications
-              </Button>
-            </div>
+            )}
+            
+            {emergencyMode && (
+              <div className="flex justify-between items-center bg-red-900/30 p-2 rounded border border-red-700">
+                <div className="text-terminal-red text-sm animate-pulse font-bold">
+                  EMERGENCY MODE ACTIVE
+                </div>
+                <div className="text-white text-xs">
+                  Location tracking: ACTIVE | Device info transmitted
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
-        <div className="flex-1 bg-terminal-panel-bg p-4 overflow-y-auto border-l border-r border-gray-700">
-          {messages.map((msg, index) => (
-            <div key={index} className={`mb-4 ${msg.isUser ? 'text-right' : ''}`}>
-              <div className={`inline-block p-3 rounded-lg ${
-                msg.isUser 
-                  ? 'bg-terminal-dark-bg text-terminal-green border border-terminal-green' 
-                  : 'bg-black bg-opacity-40 text-terminal-cyan border border-terminal-cyan'
-              }`}>
-                {msg.text}
+        <div className={`flex-1 bg-terminal-panel-bg p-4 overflow-y-auto border-l border-r ${emergencyMode ? 'border-red-700' : 'border-gray-700'}`}>
+          {messages.map((msg, index) => {
+            // Determine if this message is an emergency message
+            const isEmergencyMsg = !msg.isUser && msg.text.includes("EMERGENCY MODE");
+            
+            return (
+              <div key={index} className={`mb-4 ${msg.isUser ? 'text-right' : ''}`}>
+                <div className={`inline-block p-3 rounded-lg ${
+                  msg.isUser 
+                    ? 'bg-terminal-dark-bg text-terminal-green border border-terminal-green' 
+                    : isEmergencyMsg
+                      ? 'bg-red-950 text-terminal-red border border-terminal-red animate-pulse'
+                      : 'bg-black bg-opacity-40 text-terminal-cyan border border-terminal-cyan'
+                }`}>
+                  {msg.text.split('\n').map((text, i) => (
+                    <div key={i}>{text}</div>
+                  ))}
+                </div>
+                {isEmergencyMsg && (
+                  <div className="text-xs text-terminal-red mt-1">
+                    Device: {deviceInfo.deviceType} {deviceInfo.modelNumber} (SN: {deviceInfo.serialNumber})
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         
         <div className="bg-terminal-dark-bg p-4 rounded-b border border-t-0 border-gray-700">
