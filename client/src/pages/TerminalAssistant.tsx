@@ -96,6 +96,10 @@ export default function TerminalAssistant() {
   const [emergencyMode, setEmergencyMode] = useState(false);
   const [apiConnected, setApiConnected] = useState(false);
   const [apiConnectionStatus, setApiConnectionStatus] = useState<"connecting" | "connected" | "failed" | "idle">("idle");
+  
+  // Real device connection state
+  const [connectedDevice, setConnectedDevice] = useState<ConnectedDevice | null>(null);
+  const [activeOperation, setActiveOperation] = useState<DeviceOperation | null>(null);
   const [aiAssistants, setAiAssistants] = useState<{
     anthropic: boolean;
     openai: boolean;
@@ -103,9 +107,6 @@ export default function TerminalAssistant() {
   const [activeAssistant, setActiveAssistant] = useState<"anthropic" | "openai" | "quantum" | null>("quantum");
   const [aiLoading, setAiLoading] = useState(false);
   const [waitingForKeyConfirmation, setWaitingForKeyConfirmation] = useState<"anthropic" | "openai" | null>(null);
-  
-  // Real-world device connection state
-  const [connectedDevice, setConnectedDevice] = useState<ConnectedDevice | null>(null);
   
   // Legacy device information for backward compatibility
   const deviceInfo = {
@@ -2658,6 +2659,76 @@ Your development environment is now operating at optimal parameters.`,
           </div>
         </div>
       </div>
+      {/* Device Connector Modal */}
+      {showDeviceConnector && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-terminal-dark-bg border border-terminal-gray rounded-lg max-w-2xl w-full">
+            <div className="p-4 border-b border-terminal-gray flex justify-between items-center">
+              <h3 className="text-terminal-cyan font-bold">Connect Device</h3>
+              <button 
+                onClick={() => setShowDeviceConnector(false)}
+                className="text-terminal-gray hover:text-terminal-cyan"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-4">
+              <DeviceConnector 
+                onConnect={handleDeviceConnect}
+                onDisconnect={handleDeviceDisconnect}
+                showStatus={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Device Metrics Modal */}
+      {showDeviceMetrics && connectedDevice && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-terminal-dark-bg border border-terminal-gray rounded-lg max-w-2xl w-full">
+            <div className="p-4 border-b border-terminal-gray flex justify-between items-center">
+              <h3 className="text-terminal-cyan font-bold">{connectedDevice.name} Metrics</h3>
+              <button 
+                onClick={() => setShowDeviceMetrics(false)}
+                className="text-terminal-gray hover:text-terminal-cyan"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-4">
+              <DeviceMetrics 
+                deviceId={connectedDevice.id}
+                compact={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Device Operations Modal */}
+      {showDeviceOperations && connectedDevice && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-terminal-dark-bg border border-terminal-gray rounded-lg max-w-2xl w-full">
+            <div className="p-4 border-b border-terminal-gray flex justify-between items-center">
+              <h3 className="text-terminal-amber font-bold">{connectedDevice.name} Operations</h3>
+              <button 
+                onClick={() => setShowDeviceOperations(false)}
+                className="text-terminal-gray hover:text-terminal-amber"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-4">
+              <DeviceOperations 
+                deviceId={connectedDevice.id}
+                maxOperations={10}
+                onOperationComplete={handleOperationComplete}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </QuantumTerminalLayout>
   );
 }
