@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+  
+  /* Terminal Colors */
+  --terminal-bg: #121212;
+  --terminal-dark-bg: #0A0A0A;
+  --terminal-panel-bg: #1A1A1A;
+  --terminal-cyan: #00FFFF;
+  --terminal-green: #00FF00;
+  --terminal-amber: #FFA500;
+  --terminal-purple: #9D00FF;
+  --terminal-red: #FF0000;
+  --terminal-gray: #808080;
+  --terminal-light-gray: #A0A0A0;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-mono antialiased;
+    background-color: var(--terminal-bg);
+    color: #CCCCCC;
+  }
+}
+
+/* Terminal Specific Styles */
+.typing-effect {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 3px solid var(--terminal-cyan);
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: var(--terminal-cyan) }
+}
+
+.scan-line {
+  background: linear-gradient(to bottom, transparent, rgba(0, 255, 255, 0.1), transparent);
+  animation: scan-movement 8s linear infinite;
+}
+
+@keyframes scan-movement {
+  0% { transform: translateY(-100%) }
+  100% { transform: translateY(100%) }
+}
+
+.terminal-line::before {
+  content: "> ";
+  color: var(--terminal-cyan);
+}
+
+.terminal-screen {
+  background: rgba(10, 10, 10, 0.7);
+  border: 1px solid #333;
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.screen-flicker {
+  animation: flicker 5s infinite;
+}
+
+@keyframes flicker {
+  0% { opacity: 1 }
+  1% { opacity: 0.8 }
+  2% { opacity: 1 }
+  55% { opacity: 1 }
+  56% { opacity: 0.9 }
+  57% { opacity: 1 }
+  98% { opacity: 1 }
+  99% { opacity: 0.8 }
+  100% { opacity: 1 }
+}
+
+.text-terminal-cyan {
+  color: var(--terminal-cyan);
+  text-shadow: 0 0 5px var(--terminal-cyan), 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.text-terminal-green {
+  color: var(--terminal-green);
+  text-shadow: 0 0 5px var(--terminal-green), 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.text-terminal-amber {
+  color: var(--terminal-amber);
+  text-shadow: 0 0 5px var(--terminal-amber), 0 0 10px rgba(255, 165, 0, 0.5);
+}
+
+.text-terminal-purple {
+  color: var(--terminal-purple);
+  text-shadow: 0 0 5px var(--terminal-purple), 0 0 10px rgba(157, 0, 255, 0.5);
+}
+
+.text-terminal-gray {
+  color: var(--terminal-gray);
+}
+
+.bg-terminal-bg {
+  background-color: var(--terminal-bg);
+}
+
+.bg-terminal-dark-bg {
+  background-color: var(--terminal-dark-bg);
+}
+
+.bg-terminal-panel-bg {
+  background-color: var(--terminal-panel-bg);
+}
+
+.border-terminal-amber {
+  border-color: var(--terminal-amber);
+}
