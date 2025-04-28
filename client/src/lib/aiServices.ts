@@ -5,10 +5,6 @@ import OpenAI from 'openai';
 let hasAnthropicKey = false;
 let hasOpenAIKey = false;
 
-// Dynamic API clients
-let anthropic: Anthropic | null = null;
-let openai: OpenAI | null = null;
-
 // Function to check API key status from the server
 export async function checkApiKeyStatus() {
   try {
@@ -25,22 +21,8 @@ export async function checkApiKeyStatus() {
     hasAnthropicKey = data.anthropic === true;
     hasOpenAIKey = data.openai === true;
     
-    // Initialize clients if keys are available
-    if (hasAnthropicKey) {
-      anthropic = new Anthropic({
-        apiKey: 'sk-ant-proxy', // The actual key is on the server, we just need a placeholder
-        dangerouslyAllowBrowser: true, // Required for client-side usage
-        baseURL: '/api/anthropic', // Will need to create this proxy endpoint
-      });
-    }
-    
-    if (hasOpenAIKey) {
-      openai = new OpenAI({
-        apiKey: 'sk-openai-proxy', // The actual key is on the server, we just need a placeholder
-        dangerouslyAllowBrowser: true, // Required for client-side usage
-        baseURL: '/api/openai', // Will need to create this proxy endpoint
-      });
-    }
+    // Update the status values only
+    // We're using fetch for API calls, so we don't need to initialize SDK clients
     
     // Update the aiServicesStatus object
     aiServicesStatus.anthropic = hasAnthropicKey;
@@ -58,21 +40,34 @@ checkApiKeyStatus();
 
 // Anthropic Claude Functions
 export async function sendMessageToAntropic(message: string): Promise<string> {
-  if (!hasAnthropicKey || !anthropic) {
+  if (!hasAnthropicKey) {
     return "Claude AI service is not available. Please ensure that your Anthropic API key is properly configured.";
   }
 
   try {
-    const response = await anthropic!.messages.create({
-      model: 'claude-3-7-sonnet-20250219',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: message }],
-      system: "You are an AI assistant specifically designed to help ervin210@icloud.com. Your responses should be helpful, respectful, and secure. Focus on providing personalized assistance related to device security and digital privacy. Keep responses concise and direct."
+    // Use fetch to communicate with our proxy endpoint instead of direct SDK call
+    const response = await fetch('/api/anthropic/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-7-sonnet-20250219',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: message }],
+        system: "You are an AI assistant specifically designed to help ervin210@icloud.com. Your responses should be helpful, respectful, and secure. Focus on providing personalized assistance related to device security and digital privacy. Keep responses concise and direct."
+      })
     });
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    const data = await response.json();
 
-    // Get the content from the response
-    if (response.content && response.content.length > 0) {
-      const firstContent = response.content[0];
+    // Get the content from the response (matches Anthropic's API structure)
+    if (data.content && data.content.length > 0) {
+      const firstContent = data.content[0];
       if ('text' in firstContent) {
         return firstContent.text;
       }
@@ -87,24 +82,37 @@ export async function sendMessageToAntropic(message: string): Promise<string> {
 
 // OpenAI Functions
 export async function sendMessageToOpenAI(message: string): Promise<string> {
-  if (!hasOpenAIKey || !openai) {
+  if (!hasOpenAIKey) {
     return "GPT AI service is not available. Please ensure that your OpenAI API key is properly configured.";
   }
 
   try {
-    const response = await openai!.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: "You are an AI assistant specifically designed to help ervin210@icloud.com. Your responses should be helpful, respectful, and secure. Focus on providing personalized assistance related to device security and digital privacy. You have access to information about user's iPhone (MU773ZD/A, SN:D2VMW6RNW2). Keep responses concise and direct."
-        },
-        { role: 'user', content: message }
-      ],
-      max_tokens: 1000,
+    // Use fetch to communicate with our proxy endpoint instead of direct SDK call
+    const response = await fetch('/api/openai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: "You are an AI assistant specifically designed to help ervin210@icloud.com. Your responses should be helpful, respectful, and secure. Focus on providing personalized assistance related to device security and digital privacy. You have access to information about user's iPhone (MU773ZD/A, SN:D2VMW6RNW2). Keep responses concise and direct."
+          },
+          { role: 'user', content: message }
+        ],
+        max_tokens: 1000,
+      })
     });
-
-    return response.choices[0].message.content || "No response generated";
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    return data.choices[0].message.content || "No response generated";
   } catch (error) {
     console.error('Error communicating with OpenAI:', error);
     return "I'm having trouble connecting to the OpenAI service. Please try again later.";
