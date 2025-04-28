@@ -115,7 +115,8 @@ export default function TerminalAssistant() {
       ...prev, 
       {
         text: "EMERGENCY MODE ACTIVATED. Location tracking enabled. Emergency contacts notified. Sending device information to emergency services.", 
-        isUser: false
+        isUser: false,
+        source: 'emergency'
       }
     ]);
     
@@ -125,7 +126,8 @@ export default function TerminalAssistant() {
         ...prev, 
         {
           text: `Device information sent: iPhone (${deviceInfo.modelNumber}), Serial: ${deviceInfo.serialNumber}. Approximate location data transmitted to emergency services.`, 
-          isUser: false
+          isUser: false,
+          source: 'emergency'
         }
       ]);
     }, 3000);
@@ -151,7 +153,8 @@ export default function TerminalAssistant() {
               ...prev,
               {
                 text: `AI Services detected: ${aiServicesStatus.anthropic ? 'Claude AI' : ''}${aiServicesStatus.anthropic && aiServicesStatus.openai ? ' and ' : ''}${aiServicesStatus.openai ? 'GPT AI' : ''} ${aiServicesStatus.anthropic || aiServicesStatus.openai ? 'available for enhanced assistance.' : ''}`,
-                isUser: false
+                isUser: false,
+                source: 'system'
               }
             ]);
           }
@@ -333,7 +336,11 @@ export default function TerminalAssistant() {
       // Build a detailed AI status message with additional information about configuration
       const statusMsg = `AI Services Status:\n- Quantum AI: Available and Active\n- Claude AI (Anthropic): ${aiServicesStatus.anthropic ? 'Available' : 'Not Available (API key missing)'}\n- GPT AI (OpenAI): ${aiServicesStatus.openai ? 'Available' : 'Not Available (API key missing)'}`;
       
-      setMessages(prev => [...prev, {text: statusMsg, isUser: false}]);
+      setMessages(prev => [...prev, {
+        text: statusMsg, 
+        isUser: false,
+        source: 'system'
+      }]);
       
       // If any AI services are not available, suggest configuring them
       if (!aiServicesStatus.anthropic || !aiServicesStatus.openai) {
@@ -343,7 +350,11 @@ export default function TerminalAssistant() {
           if (!aiServicesStatus.openai) missingServices.push("GPT AI (OpenAI)");
           
           const setupMsg = `Would you like to configure ${missingServices.join(" and ")}? Type "setup claude" or "setup gpt" to configure the respective service.`;
-          setMessages(prev => [...prev, {text: setupMsg, isUser: false}]);
+          setMessages(prev => [...prev, {
+            text: setupMsg, 
+            isUser: false,
+            source: 'system'
+          }]);
         }, 1000);
       }
       
@@ -364,10 +375,18 @@ export default function TerminalAssistant() {
       if (!emergencyMode) {
         setEmergencyMode(true);
         const emergencyResponse = "EMERGENCY MODE ACTIVATED. Sending your device information (iPhone MU773ZD/A, Serial: D2VMW6RNW2) and location to emergency services. Stay on this channel for updates.";
-        setMessages(prev => [...prev, {text: emergencyResponse, isUser: false}]);
+        setMessages(prev => [...prev, {
+          text: emergencyResponse, 
+          isUser: false,
+          source: 'emergency'
+        }]);
       } else {
         const emergencyUpdateResponse = "Emergency services have been notified. Your location is being tracked. Please stay in place if possible. Help is on the way.";
-        setMessages(prev => [...prev, {text: emergencyUpdateResponse, isUser: false}]);
+        setMessages(prev => [...prev, {
+          text: emergencyUpdateResponse, 
+          isUser: false,
+          source: 'emergency'
+        }]);
       }
       setInput("");
       return;
@@ -377,7 +396,11 @@ export default function TerminalAssistant() {
     if (input.toLowerCase().includes("api") || input.toLowerCase().includes("connect api") || input.toLowerCase().includes("external")) {
       if (!apiConnected) {
         const apiResponse = "I'll establish connection to the API endpoints for enhanced functionality. Initiating connection now...";
-        setMessages(prev => [...prev, {text: apiResponse, isUser: false}]);
+        setMessages(prev => [...prev, {
+          text: apiResponse, 
+          isUser: false,
+          source: 'system'
+        }]);
         // Trigger API connection process
         connectToApi();
       } else {
@@ -386,7 +409,11 @@ export default function TerminalAssistant() {
         ).join('\n');
         
         const apiStatusResponse = `API connection is already active. Currently connected to ${apiInfo.endpoints.length} endpoints:\n${statusList}\n\nLast sync: ${new Date(apiInfo.lastSyncTime).toLocaleTimeString()}`;
-        setMessages(prev => [...prev, {text: apiStatusResponse, isUser: false}]);
+        setMessages(prev => [...prev, {
+          text: apiStatusResponse, 
+          isUser: false,
+          source: 'system'
+        }]);
       }
       setInput("");
       return;
@@ -398,7 +425,11 @@ export default function TerminalAssistant() {
         setAiLoading(true);
         
         let loadingMsg = "Processing your request...";
-        setMessages(prev => [...prev, {text: loadingMsg, isUser: false}]);
+        setMessages(prev => [...prev, {
+          text: loadingMsg, 
+          isUser: false,
+          source: 'system'
+        }]);
         
         // Call the AI service
         const aiResponse = await getAIResponse(input, activeAssistant);
@@ -407,11 +438,19 @@ export default function TerminalAssistant() {
         setMessages(prev => {
           const newMessages = [...prev];
           newMessages.pop(); // Remove loading message
-          return [...newMessages, {text: aiResponse, isUser: false}];
+          return [...newMessages, {
+            text: aiResponse, 
+            isUser: false,
+            source: activeAssistant // Set proper source for AI message
+          }];
         });
       } catch (error) {
         console.error("Error getting AI response:", error);
-        setMessages(prev => [...prev, {text: "Sorry, I encountered an error processing your request with the AI service. Would you like to try again?", isUser: false}]);
+        setMessages(prev => [...prev, {
+          text: "Sorry, I encountered an error processing your request with the AI service. Would you like to try again?", 
+          isUser: false,
+          source: 'system'
+        }]);
       } finally {
         setAiLoading(false);
       }
@@ -449,7 +488,11 @@ export default function TerminalAssistant() {
         response = "I can connect to advanced AI services to enhance my capabilities. You can say 'Use Claude AI' or 'Use GPT AI' to activate these assistants.";
       }
       
-      setMessages(prev => [...prev, {text: response, isUser: false}]);
+      setMessages(prev => [...prev, {
+        text: response, 
+        isUser: false,
+        source: 'quantum'
+      }]);
     }
     
     // Clear input
