@@ -14,6 +14,8 @@ export default function TerminalAssistant() {
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [securityLevel, setSecurityLevel] = useState("maximum");
   const [emergencyMode, setEmergencyMode] = useState(false);
+  const [apiConnected, setApiConnected] = useState(false);
+  const [apiConnectionStatus, setApiConnectionStatus] = useState<"connecting" | "connected" | "failed" | "idle">("idle");
   
   // Device information
   const deviceInfo = {
@@ -23,6 +25,18 @@ export default function TerminalAssistant() {
     lastBackup: "Today, 14:32",
     batteryStatus: "87%",
     osVersion: "iOS 17.4.1"
+  };
+  
+  // API connection information
+  const apiInfo = {
+    endpoints: [
+      { name: "Security Scanner", url: "api.quantum-scanner.com", status: "active" },
+      { name: "Device Monitor", url: "monitor.quantum-terminal.net", status: "active" },
+      { name: "Emergency Services", url: "emergency.quantum-terminal.net", status: "standby" },
+      { name: "iCloud Integration", url: "api.icloud-connect.com", status: "active" }
+    ],
+    authMethod: "OAuth2",
+    lastSyncTime: new Date().toISOString()
   };
   const { toast } = useToast();
 
@@ -38,6 +52,35 @@ export default function TerminalAssistant() {
     
     return () => clearTimeout(timer);
   }, [toast]);
+  
+  // Function to connect to API endpoints
+  const connectToApi = () => {
+    setApiConnectionStatus("connecting");
+    toast({
+      title: "Connecting to API endpoints",
+      description: "Establishing secure connections to external services..."
+    });
+    
+    // Simulate API connection process
+    setTimeout(() => {
+      setApiConnected(true);
+      setApiConnectionStatus("connected");
+      
+      toast({
+        title: "API Connection Successful",
+        description: `Connected to ${apiInfo.endpoints.length} endpoints using ${apiInfo.authMethod}`
+      });
+      
+      setMessages(prev => [
+        ...prev,
+        {
+          text: `API connection established. Connected to ${apiInfo.endpoints.length} service endpoints:\n` +
+                apiInfo.endpoints.map(endpoint => `- ${endpoint.name} (${endpoint.url}): ${endpoint.status}`).join('\n'),
+          isUser: false
+        }
+      ]);
+    }, 2500);
+  };
 
   // Handle emergency mode activation
   const handleEmergencyMode = () => {
@@ -88,13 +131,31 @@ export default function TerminalAssistant() {
           response = "Emergency services have been notified. Your location is being tracked. Please stay in place if possible. Help is on the way.";
         }
       }
+      // Check for API connection commands
+      else if (input.toLowerCase().includes("api") || input.toLowerCase().includes("connect api") || input.toLowerCase().includes("external")) {
+        if (!apiConnected) {
+          response = "I'll establish connection to the API endpoints for enhanced functionality. Initiating connection now...";
+          // Trigger API connection process
+          connectToApi();
+        } else {
+          const statusList = apiInfo.endpoints.map(endpoint => 
+            `- ${endpoint.name}: ${endpoint.status === 'active' ? '✓ Online' : '⚠️ Standby'}`
+          ).join('\n');
+          
+          response = `API connection is already active. Currently connected to ${apiInfo.endpoints.length} endpoints:\n${statusList}\n\nLast sync: ${new Date(apiInfo.lastSyncTime).toLocaleTimeString()}`;
+        }
+      }
       // Enhanced keyword matching for iCloud integration demonstration
       else if (input.toLowerCase().includes("email") || input.toLowerCase().includes("icloud")) {
         response = "Your iCloud email (ervin210@icloud.com) is secure. Last login was from your usual location. No suspicious activities detected. Would you like me to scan for potential phishing attempts?";
       } else if (input.toLowerCase().includes("phone") || input.toLowerCase().includes("mobile") || input.toLowerCase().includes("device")) {
         response = `Your iPhone (${deviceInfo.modelNumber}, SN:${deviceInfo.serialNumber}) is currently connected and secured. Battery level is at ${deviceInfo.batteryStatus}. Running ${deviceInfo.osVersion}. Last backup: ${deviceInfo.lastBackup}. Would you like me to run a security scan?`;
       } else if (input.toLowerCase().includes("scan") || input.toLowerCase().includes("security")) {
-        response = `Initiating comprehensive security scan for your iPhone ${deviceInfo.modelNumber} and all devices linked to ervin210@icloud.com. This will check for vulnerabilities, malware, and unauthorized access attempts. I'll notify you when complete.`;
+        if (!apiConnected) {
+          response = `I'll need to connect to our security API endpoints first to perform a comprehensive scan. Type "connect API" to establish the connection.`;
+        } else {
+          response = `Initiating comprehensive security scan for your iPhone ${deviceInfo.modelNumber} and all devices linked to ervin210@icloud.com. This will check for vulnerabilities, malware, and unauthorized access attempts. I'll notify you when complete.`;
+        }
       } else if (input.toLowerCase().includes("alert") || input.toLowerCase().includes("warning")) {
         response = "You have 2 active security notices: 1) A new device logged into your Apple account from Los Angeles yesterday. 2) 3 failed login attempts on your iCloud Drive. Would you like me to lock down your account temporarily?";
       } else if (input.toLowerCase().includes("photos") || input.toLowerCase().includes("files")) {
@@ -103,6 +164,13 @@ export default function TerminalAssistant() {
         response = `Your last iCloud backup was completed at ${deviceInfo.lastBackup}. All devices are synced and up to date. Critical data is secured with end-to-end encryption.`;
       } else if (input.toLowerCase().includes("serial") || input.toLowerCase().includes("model")) {
         response = `Your device information:\nModel: ${deviceInfo.modelNumber}\nSerial Number: ${deviceInfo.serialNumber}\nDevice Type: ${deviceInfo.deviceType}\nOS Version: ${deviceInfo.osVersion}`;
+      } else if (input.toLowerCase().includes("endpoint") || input.toLowerCase().includes("service")) {
+        if (!apiConnected) {
+          response = "External service endpoints are not currently connected. Would you like to connect to the API services?";
+        } else {
+          response = `Currently connected to the following service endpoints:\n` +
+                     apiInfo.endpoints.map(ep => `- ${ep.name} (${ep.url}): ${ep.status}`).join('\n');
+        }
       }
       
       setMessages(prev => [...prev, {text: response, isUser: false}]);
@@ -277,11 +345,47 @@ export default function TerminalAssistant() {
               </div>
             )}
             
-            <div className="flex justify-between items-center mt-1 text-xs text-terminal-gray">
-              <div>Connected to iCloud account: ervin210@icloud.com</div>
-              {isMobileConnected && (
-                <div className="text-terminal-green">iPhone sync active</div>
-              )}
+            <div className="flex flex-col gap-1 mt-1">
+              <div className="flex justify-between items-center text-xs text-terminal-gray">
+                <div>Connected to iCloud account: ervin210@icloud.com</div>
+                {isMobileConnected && (
+                  <div className="text-terminal-green">iPhone sync active</div>
+                )}
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className={`h-2 w-2 rounded-full ${
+                    apiConnectionStatus === "connected" ? "bg-terminal-green" : 
+                    apiConnectionStatus === "connecting" ? "bg-terminal-amber animate-pulse" :
+                    apiConnectionStatus === "failed" ? "bg-terminal-red" : "bg-terminal-gray"
+                  }`}></div>
+                  <div className="text-xs text-terminal-gray">
+                    API Status: {
+                      apiConnectionStatus === "connected" ? "Connected" : 
+                      apiConnectionStatus === "connecting" ? "Connecting..." :
+                      apiConnectionStatus === "failed" ? "Connection Failed" : "Not Connected"
+                    }
+                  </div>
+                </div>
+                
+                {!apiConnected && apiConnectionStatus !== "connecting" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-6 px-2 border-terminal-cyan text-terminal-cyan"
+                    onClick={connectToApi}
+                  >
+                    Connect API
+                  </Button>
+                )}
+                
+                {apiConnected && (
+                  <div className="text-xs text-terminal-green">
+                    {apiInfo.endpoints.filter(e => e.status === 'active').length} services online
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
