@@ -16,7 +16,7 @@ const RightPanel = () => {
   const [showDnaInfo, setShowDnaInfo] = useState(false);
   
   // Fetch system status from our API
-  const { data: systemStatuses, isLoading, error } = useQuery({
+  const { data: systemStatuses = [], isLoading, error } = useQuery<SystemStatus[]>({
     queryKey: ['/api/system/status'],
     staleTime: 60000, // 1 minute
   });
@@ -31,7 +31,7 @@ const RightPanel = () => {
         <div className="terminal-line text-terminal-red">Error loading system status</div>
       ) : (
         <>
-          {systemStatuses && systemStatuses.map((status: SystemStatus, index: number) => (
+          {systemStatuses.map((status: SystemStatus, index: number) => (
             <div key={index} className="flex items-center mb-3">
               <CheckCircleIcon className="w-5 h-5 mr-2" />
               <span className="text-white">{status.name}</span>
