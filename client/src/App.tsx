@@ -8,10 +8,13 @@ import Home from "@/pages/Home";
 
 // Import pages with correct paths
 import SecurityServices from "./pages/SecurityServices";
+import TerminalAssistant from "./pages/TerminalAssistant";
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/services" component={SecurityServices} />
+      <Route path="/assistant" component={TerminalAssistant} />
       <Route component={NotFound} />
     </Switch>
   );
