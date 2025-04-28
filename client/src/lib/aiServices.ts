@@ -1,49 +1,60 @@
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 
-// Helper function to check if API keys are available
-const hasAnthropicKey = 
-    (typeof import.meta.env.VITE_ANTHROPIC_API_KEY === 'string' && 
-     import.meta.env.VITE_ANTHROPIC_API_KEY.trim() !== '') || 
-    (typeof import.meta.env.ANTHROPIC_API_KEY === 'string' && 
-     import.meta.env.ANTHROPIC_API_KEY.trim() !== '');
+// State to track API key availability - will be updated by checkApiKeyStatus()
+let hasAnthropicKey = false;
+let hasOpenAIKey = false;
 
-const hasOpenAIKey = 
-    (typeof import.meta.env.VITE_OPENAI_API_KEY === 'string' && 
-     import.meta.env.VITE_OPENAI_API_KEY.trim() !== '') || 
-    (typeof import.meta.env.OPENAI_API_KEY === 'string' && 
-     import.meta.env.OPENAI_API_KEY.trim() !== '');
+// Dynamic API clients
+let anthropic: Anthropic | null = null;
+let openai: OpenAI | null = null;
 
-// Get the actual API keys, prioritizing environment variables
-const getAnthropicKey = () => {
-  if (typeof import.meta.env.ANTHROPIC_API_KEY === 'string' && 
-      import.meta.env.ANTHROPIC_API_KEY.trim() !== '') {
-    return import.meta.env.ANTHROPIC_API_KEY;
+// Function to check API key status from the server
+export async function checkApiKeyStatus() {
+  try {
+    const response = await fetch('/api/ai/status');
+    if (!response.ok) {
+      console.error('Failed to fetch API key status:', response.statusText);
+      return false;
+    }
+    
+    const data = await response.json();
+    console.log('API key status:', data);
+    
+    // Update status variables
+    hasAnthropicKey = data.anthropic === true;
+    hasOpenAIKey = data.openai === true;
+    
+    // Initialize clients if keys are available
+    if (hasAnthropicKey) {
+      anthropic = new Anthropic({
+        apiKey: 'sk-ant-proxy', // The actual key is on the server, we just need a placeholder
+        dangerouslyAllowBrowser: true, // Required for client-side usage
+        baseURL: '/api/anthropic', // Will need to create this proxy endpoint
+      });
+    }
+    
+    if (hasOpenAIKey) {
+      openai = new OpenAI({
+        apiKey: 'sk-openai-proxy', // The actual key is on the server, we just need a placeholder
+        dangerouslyAllowBrowser: true, // Required for client-side usage
+        baseURL: '/api/openai', // Will need to create this proxy endpoint
+      });
+    }
+    
+    // Update the aiServicesStatus object
+    aiServicesStatus.anthropic = hasAnthropicKey;
+    aiServicesStatus.openai = hasOpenAIKey;
+    
+    return true;
+  } catch (error) {
+    console.error('Error checking API key status:', error);
+    return false;
   }
-  return import.meta.env.VITE_ANTHROPIC_API_KEY || '';
-};
+}
 
-const getOpenAIKey = () => {
-  if (typeof import.meta.env.OPENAI_API_KEY === 'string' && 
-      import.meta.env.OPENAI_API_KEY.trim() !== '') {
-    return import.meta.env.OPENAI_API_KEY;
-  }
-  return import.meta.env.VITE_OPENAI_API_KEY || '';
-};
-
-// Initialize the Anthropic client if API key is available
-// the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-const anthropic = hasAnthropicKey ? new Anthropic({
-  apiKey: getAnthropicKey(),
-  dangerouslyAllowBrowser: true, // Required for client-side usage
-}) : null;
-
-// Initialize the OpenAI client if API key is available
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-const openai = hasOpenAIKey ? new OpenAI({
-  apiKey: getOpenAIKey(),
-  dangerouslyAllowBrowser: true, // Required for client-side usage
-}) : null;
+// Call it immediately on load
+checkApiKeyStatus();
 
 // Anthropic Claude Functions
 export async function sendMessageToAntropic(message: string): Promise<string> {

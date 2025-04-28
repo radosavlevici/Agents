@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -6,6 +6,8 @@ import {
   insertSecurityAlertSchema, insertSecurityReportSchema 
 } from "@shared/schema";
 import { z } from "zod";
+import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for the Quantum Terminal Cybersecurity Platform
@@ -262,6 +264,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json(statuses);
     } catch (error) {
       return res.status(500).json({ error: "Failed to fetch system status" });
+    }
+  });
+  
+  // AI Services API Keys status
+  app.get("/api/ai/status", (_req, res) => {
+    try {
+      const aiStatus = {
+        anthropic: process.env.ANTHROPIC_API_KEY ? true : false,
+        openai: process.env.OPENAI_API_KEY ? true : false
+      };
+      
+      return res.status(200).json(aiStatus);
+    } catch (error) {
+      return res.status(500).json({ error: "Failed to check AI services status" });
+    }
+  });
+  
+  // Anthropic API Proxy
+  app.post("/api/anthropic/messages", async (req, res) => {
+    try {
+      if (!process.env.ANTHROPIC_API_KEY) {
+        return res.status(400).json({ error: "Anthropic API key not configured on the server" });
+      }
+      
+      const anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY
+      });
+      
+      // Forward the request to Anthropic
+      const response = await anthropic.messages.create(req.body);
+      return res.status(200).json(response);
+    } catch (error) {
+      console.error("Error forwarding request to Anthropic:", error);
+      return res.status(500).json({ error: "Failed to process Anthropic API request" });
+    }
+  });
+  
+  // OpenAI API Proxy
+  app.post("/api/openai/chat/completions", async (req, res) => {
+    try {
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ error: "OpenAI API key not configured on the server" });
+      }
+      
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+      
+      // Forward the request to OpenAI
+      const response = await openai.chat.completions.create(req.body);
+      return res.status(200).json(response);
+    } catch (error) {
+      console.error("Error forwarding request to OpenAI:", error);
+      return res.status(500).json({ error: "Failed to process OpenAI API request" });
     }
   });
 

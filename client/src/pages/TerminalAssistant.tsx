@@ -668,21 +668,35 @@ export default function TerminalAssistant() {
                       size="sm" 
                       variant="outline"
                       className="text-xs border-terminal-gray text-terminal-gray hover:bg-terminal-cyan/10 hover:text-terminal-cyan"
-                      onClick={() => {
+                      onClick={async () => {
                         // Attempt to refresh API key status
                         const statusMsg = "Checking AI service status and refreshing connections...";
                         setMessages(prev => [...prev, {text: statusMsg, isUser: false}]);
                         
-                        // In a real application, this would re-check for API keys
-                        setTimeout(() => {
-                          // Use the API status from aiServicesStatus rather than local state
-                          const refreshedStatus = `AI Services Status Updated:\n` +
-                          `- Quantum AI: Available and Active\n` +
-                          `- Claude AI (Anthropic): ${aiServicesStatus.anthropic ? 'Connected ✓' : 'Not Available (API key missing)'}\n` +
-                          `- GPT AI (OpenAI): ${aiServicesStatus.openai ? 'Connected ✓' : 'Not Available (API key missing)'}`;
+                        try {
+                          // Use our checkApiKeyStatus function to refresh the status
+                          const success = await checkApiKeyStatus();
                           
-                          setMessages(prev => [...prev, {text: refreshedStatus, isUser: false}]);
-                        }, 1500);
+                          if (success) {
+                            const refreshedStatus = `AI Services Status Updated:\n` +
+                            `- Quantum AI: Available and Active\n` +
+                            `- Claude AI (Anthropic): ${aiServicesStatus.anthropic ? 'Connected ✓' : 'Not Available (API key missing)'}\n` +
+                            `- GPT AI (OpenAI): ${aiServicesStatus.openai ? 'Connected ✓' : 'Not Available (API key missing)'}`;
+                            
+                            setMessages(prev => [...prev, {text: refreshedStatus, isUser: false}]);
+                          } else {
+                            setMessages(prev => [...prev, {
+                              text: "Failed to refresh AI services status. Please try again later.",
+                              isUser: false
+                            }]);
+                          }
+                        } catch (error) {
+                          console.error("Error refreshing API status:", error);
+                          setMessages(prev => [...prev, {
+                            text: "Error occurred while refreshing AI services status. Please try again later.",
+                            isUser: false
+                          }]);
+                        }
                       }}
                     >
                       Refresh Status
