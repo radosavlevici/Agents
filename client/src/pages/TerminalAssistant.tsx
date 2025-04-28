@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { getAIResponse, aiServicesStatus } from "@/lib/aiServices";
+import { getAIResponse, aiServicesStatus, checkApiKeyStatus } from "@/lib/aiServices";
 
 export default function TerminalAssistant() {
   const [input, setInput] = useState("");
@@ -122,10 +122,35 @@ export default function TerminalAssistant() {
 
   // Initialize AI assistants based on available API keys
   useEffect(() => {
-    setAiAssistants({
-      anthropic: aiServicesStatus.anthropic,
-      openai: aiServicesStatus.openai
-    });
+    // Check API key status when component loads
+    const initializeAIStatus = async () => {
+      try {
+        const success = await checkApiKeyStatus();
+        
+        if (success) {
+          console.log("AI services initialized successfully");
+          setAiAssistants({
+            anthropic: aiServicesStatus.anthropic,
+            openai: aiServicesStatus.openai
+          });
+          
+          // Add a message if AI services are available
+          if (aiServicesStatus.anthropic || aiServicesStatus.openai) {
+            setMessages(prev => [
+              ...prev,
+              {
+                text: `AI Services detected: ${aiServicesStatus.anthropic ? 'Claude AI' : ''}${aiServicesStatus.anthropic && aiServicesStatus.openai ? ' and ' : ''}${aiServicesStatus.openai ? 'GPT AI' : ''} ${aiServicesStatus.anthropic || aiServicesStatus.openai ? 'available for enhanced assistance.' : ''}`,
+                isUser: false
+              }
+            ]);
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing AI services:", error);
+      }
+    };
+    
+    initializeAIStatus();
   }, []);
 
   // Function to activate AI assistants
@@ -432,7 +457,32 @@ export default function TerminalAssistant() {
     const serviceName = service === 'anthropic' ? 'Claude AI (Anthropic)' : 'GPT AI (OpenAI)';
     const envVar = service === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY';
     
-    // Display informative message about missing API key
+    // First, check if API key might already be available by refreshing status
+    try {
+      await checkApiKeyStatus();
+      
+      // After refreshing, check if the service is now available
+      const serviceAvailable = service === 'anthropic' ? aiServicesStatus.anthropic : aiServicesStatus.openai;
+      
+      if (serviceAvailable) {
+        // API key is actually available, just need to activate the service
+        setMessages(prev => [
+          ...prev,
+          {
+            text: `Good news! Your ${serviceName} API key has been detected. Activating the service now...`,
+            isUser: false
+          }
+        ]);
+        
+        // Activate the service
+        activateAIAssistant(service);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking API key status:', error);
+    }
+    
+    // If we get here, the API key is definitely missing, so request it
     setMessages(prev => [
       ...prev,
       {
@@ -453,7 +503,7 @@ export default function TerminalAssistant() {
         setMessages(prev => [
           ...prev,
           {
-            text: `To add your ${service === 'anthropic' ? 'Anthropic Claude' : 'OpenAI'} API key:\n\n1. Get your API key from ${service === 'anthropic' ? 'https://console.anthropic.com' : 'https://platform.openai.com'}\n2. Add it to the environment variables in your project\n3. Restart the application to apply changes\n\nOnce added, you'll be able to use ${serviceName} in your Quantum Terminal.`,
+            text: `To add your ${service === 'anthropic' ? 'Anthropic Claude' : 'OpenAI'} API key:\n\n1. Get your API key from ${service === 'anthropic' ? 'https://console.anthropic.com' : 'https://platform.openai.com'}\n2. Add it to the environment variables in your project using the Secrets Manager\n3. Restart the application to apply changes\n\nOnce added, you'll be able to use ${serviceName} in your Quantum Terminal.`,
             isUser: false
           }
         ]);
