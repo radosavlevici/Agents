@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { getAIResponse, aiServicesStatus, checkApiKeyStatus } from "@/lib/aiServices";
+import DeviceConnector, { ConnectedDevice } from "@/components/DeviceConnector";
+import DeviceMetrics from "@/components/DeviceMetrics";
+import DeviceOperations from "@/components/DeviceOperations";
+import { realWorldOps, DeviceOperation } from "@/lib/realWorldOperations";
 
 export default function TerminalAssistant() {
   const [input, setInput] = useState("");
@@ -100,7 +104,10 @@ export default function TerminalAssistant() {
   const [aiLoading, setAiLoading] = useState(false);
   const [waitingForKeyConfirmation, setWaitingForKeyConfirmation] = useState<"anthropic" | "openai" | null>(null);
   
-  // Device information
+  // Real-world device connection state
+  const [connectedDevice, setConnectedDevice] = useState<ConnectedDevice | null>(null);
+  
+  // Legacy device information for backward compatibility
   const deviceInfo = {
     serialNumber: "D2VMW6RNW2",
     modelNumber: "MU773ZD/A",
@@ -108,6 +115,87 @@ export default function TerminalAssistant() {
     lastBackup: "Today, 14:32",
     batteryStatus: "87%",
     osVersion: "iOS 17.4.1"
+  };
+  
+  // Handle device connection
+  const handleDeviceConnect = (device: ConnectedDevice) => {
+    setConnectedDevice(device);
+    setIsMobileConnected(true);
+    
+    // Register device with real-world operations service
+    realWorldOps.registerDevice(device);
+    
+    // Add a system message
+    setMessages(prev => [...prev, {
+      text: `🔗 SYSTEM: Successfully connected to ${device.name} (${device.model}). Device is now secured and ready for operations.`,
+      isUser: false,
+      source: 'system'
+    }]);
+    
+    // If agent mode is active, start a system scan
+    if (agentMode) {
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          text: `🔍 AGENT: Detected new device connection. Initiating security scan and system analysis of ${device.name}...`,
+          isUser: false,
+          source: 'agent'
+        }]);
+        
+        try {
+          // Execute a real system scan operation
+          const operationId = realWorldOps.executeOperation(device.id, 'scan', 'system');
+          
+          // Monitor the operation
+          realWorldOps.onOperationUpdate(operationId, (operation) => {
+            if (operation.status === 'completed') {
+              setMessages(prev => [...prev, {
+                text: `✅ AGENT: System scan of ${device.name} complete. Device is now under active monitoring and protection.`,
+                isUser: false,
+                source: 'agent'
+              }]);
+            }
+          });
+        } catch (error) {
+          console.error('Failed to initiate system scan:', error);
+        }
+      }, 2000);
+    }
+  };
+  
+  // Handle device disconnection
+  const handleDeviceDisconnect = () => {
+    if (connectedDevice) {
+      // Unregister device from real-world operations service
+      realWorldOps.unregisterDevice(connectedDevice.id);
+      
+      // Add a system message
+      setMessages(prev => [...prev, {
+        text: `🔌 SYSTEM: Disconnected from ${connectedDevice.name}. Device connection terminated.`,
+        isUser: false,
+        source: 'system'
+      }]);
+    }
+    
+    setConnectedDevice(null);
+    setIsMobileConnected(false);
+  };
+  
+  // Handle operation completion
+  const handleOperationComplete = (operation: DeviceOperation) => {
+    // Add a system message about the completed operation
+    if (operation.status === 'completed') {
+      setMessages(prev => [...prev, {
+        text: `✅ SYSTEM: Operation completed successfully: ${operation.commands[0]?.type.toUpperCase()} - ${operation.commands[0]?.target}`,
+        isUser: false,
+        source: 'system'
+      }]);
+    } else if (operation.status === 'failed') {
+      setMessages(prev => [...prev, {
+        text: `⚠️ SYSTEM: Operation failed: ${operation.commands[0]?.type.toUpperCase()} - ${operation.commands[0]?.target}`,
+        isUser: false,
+        source: 'system'
+      }]);
+    }
   };
   
   // API connection information
