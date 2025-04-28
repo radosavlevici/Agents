@@ -2,23 +2,47 @@ import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 
 // Helper function to check if API keys are available
-const hasAnthropicKey = typeof import.meta.env.VITE_ANTHROPIC_API_KEY === 'string' && 
-                       import.meta.env.VITE_ANTHROPIC_API_KEY.trim() !== '';
-const hasOpenAIKey = typeof import.meta.env.VITE_OPENAI_API_KEY === 'string' && 
-                    import.meta.env.VITE_OPENAI_API_KEY.trim() !== '';
+const hasAnthropicKey = 
+    (typeof import.meta.env.VITE_ANTHROPIC_API_KEY === 'string' && 
+     import.meta.env.VITE_ANTHROPIC_API_KEY.trim() !== '') || 
+    (typeof import.meta.env.ANTHROPIC_API_KEY === 'string' && 
+     import.meta.env.ANTHROPIC_API_KEY.trim() !== '');
+
+const hasOpenAIKey = 
+    (typeof import.meta.env.VITE_OPENAI_API_KEY === 'string' && 
+     import.meta.env.VITE_OPENAI_API_KEY.trim() !== '') || 
+    (typeof import.meta.env.OPENAI_API_KEY === 'string' && 
+     import.meta.env.OPENAI_API_KEY.trim() !== '');
+
+// Get the actual API keys, prioritizing environment variables
+const getAnthropicKey = () => {
+  if (typeof import.meta.env.ANTHROPIC_API_KEY === 'string' && 
+      import.meta.env.ANTHROPIC_API_KEY.trim() !== '') {
+    return import.meta.env.ANTHROPIC_API_KEY;
+  }
+  return import.meta.env.VITE_ANTHROPIC_API_KEY || '';
+};
+
+const getOpenAIKey = () => {
+  if (typeof import.meta.env.OPENAI_API_KEY === 'string' && 
+      import.meta.env.OPENAI_API_KEY.trim() !== '') {
+    return import.meta.env.OPENAI_API_KEY;
+  }
+  return import.meta.env.VITE_OPENAI_API_KEY || '';
+};
 
 // Initialize the Anthropic client if API key is available
 // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
 const anthropic = hasAnthropicKey ? new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
+  apiKey: getAnthropicKey(),
   dangerouslyAllowBrowser: true, // Required for client-side usage
 }) : null;
 
 // Initialize the OpenAI client if API key is available
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
 const openai = hasOpenAIKey ? new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true,  // Required for client-side usage
+  apiKey: getOpenAIKey(),
+  dangerouslyAllowBrowser: true, // Required for client-side usage
 }) : null;
 
 // Anthropic Claude Functions
