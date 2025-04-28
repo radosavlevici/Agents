@@ -30,18 +30,32 @@ export default function TerminalAssistant() {
     assignedTo?: string;
   };
   
-  // New agent mode for active device operations
+  // Enhanced agent mode for active device operations with AI collaboration
   const [agentMode, setAgentMode] = useState<boolean>(true);
+  const [collaborativeMode, setCollaborativeMode] = useState<boolean>(false);
   const [deviceOperations, setDeviceOperations] = useState<{
     scanning: boolean;
     updating: boolean;
     optimizing: boolean;
     monitoring: boolean;
+    aiAnalysis: boolean;
   }>({
     scanning: false,
     updating: false,
     optimizing: false,
     monitoring: true,
+    aiAnalysis: false,
+  });
+  
+  // Which AI models are actively contributing to agent operations
+  const [activeAIContributors, setActiveAIContributors] = useState<{
+    quantum: boolean;
+    anthropic: boolean;
+    openai: boolean;
+  }>({
+    quantum: true,
+    anthropic: false,
+    openai: false,
   });
   
   // State for to-do tasks
@@ -313,14 +327,104 @@ export default function TerminalAssistant() {
   };
 
   // Handle switching active assistants
-  const switchAssistant = (assistantType: 'anthropic' | 'openai' | 'quantum') => {
-    // For Quantum assistant, we can always switch
+  const switchAssistant = (assistantType: 'anthropic' | 'openai' | 'quantum' | 'collaborative') => {
+    // Special case for collaborative mode
+    if (assistantType === 'collaborative') {
+      // First check if both Anthropic and OpenAI are available
+      const bothAvailable = aiServicesStatus.anthropic && aiServicesStatus.openai;
+      
+      if (!bothAvailable) {
+        // Check which one is missing
+        const missingService = !aiServicesStatus.anthropic 
+          ? 'Claude AI (Anthropic)' 
+          : !aiServicesStatus.openai 
+            ? 'GPT AI (OpenAI)' 
+            : 'both AI services';
+        
+        toast({
+          title: 'Cannot Enable Collaborative Mode',
+          description: `${missingService} is not available. Please configure the missing API keys first.`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      // Activate both services if they're not already active
+      if (!aiAssistants.anthropic) {
+        activateAIAssistant('anthropic');
+      }
+      
+      if (!aiAssistants.openai) {
+        activateAIAssistant('openai');
+      }
+      
+      // Enable collaborative mode
+      setCollaborativeMode(true);
+      
+      // Update active contributors
+      setActiveAIContributors({
+        quantum: true,
+        anthropic: true,
+        openai: true
+      });
+      
+      // Keep quantum as primary interface but note we're in collaborative mode
+      setActiveAssistant('quantum');
+      
+      // Add agent notification
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev,
+          {
+            text: "🤖 COLLABORATIVE AI MODE ACTIVATED 🤖\n\nAll AI systems are now working together!\n\n• Quantum AI: Coordinating operations and device interactions\n• Claude AI: Deep analysis and reasoning\n• GPT AI: Code generation and technical solutions\n\nThis integrated approach will provide the most comprehensive assistance for your tasks.",
+            isUser: false,
+            source: 'agent'
+          }
+        ]);
+        
+        // Set AI analysis flag
+        setDeviceOperations(prev => ({
+          ...prev,
+          aiAnalysis: true
+        }));
+      }, 500);
+      
+      toast({
+        title: 'Collaborative AI Mode Activated',
+        description: 'Quantum, Claude, and GPT are now working together for maximum effectiveness.',
+      });
+      
+      return true;
+    }
+    
+    // For regular assistant switching
     if (assistantType === 'quantum') {
       setActiveAssistant('quantum');
       toast({
         title: 'Switched to Quantum AI',
         description: 'Your assistant is now powered by Quantum Terminal AI.',
       });
+      
+      // If we were in collaborative mode, exit it
+      if (collaborativeMode) {
+        setCollaborativeMode(false);
+        setActiveAIContributors({
+          quantum: true,
+          anthropic: false,
+          openai: false
+        });
+        
+        // Add notification about leaving collaborative mode
+        setMessages(prev => [
+          ...prev,
+          {
+            text: "Exited collaborative mode. Now operating with Quantum AI only.",
+            isUser: false,
+            source: 'system'
+          }
+        ]);
+      }
+      
       return true;
     }
     
@@ -349,6 +453,26 @@ export default function TerminalAssistant() {
     
     // Switch to the requested assistant
     setActiveAssistant(assistantType);
+    
+    // If we were in collaborative mode, exit it
+    if (collaborativeMode) {
+      setCollaborativeMode(false);
+      setActiveAIContributors({
+        quantum: false,
+        anthropic: assistantType === 'anthropic',
+        openai: assistantType === 'openai'
+      });
+      
+      // Add notification about leaving collaborative mode
+      setMessages(prev => [
+        ...prev,
+        {
+          text: `Exited collaborative mode. Now operating with ${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'} only.`,
+          isUser: false,
+          source: 'system'
+        }
+      ]);
+    }
     
     toast({
       title: `Switched to ${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'}`,
@@ -671,8 +795,23 @@ export default function TerminalAssistant() {
             scanning: false,
             updating: false,
             optimizing: false,
-            monitoring: false
+            monitoring: false,
+            aiAnalysis: false
           });
+        }
+      } else if (input.toLowerCase().includes("collaborative mode") || input.toLowerCase().includes("ai collaboration") || input.toLowerCase().includes("combine ai")) {
+        // Handle collaborative mode activation
+        if (!collaborativeMode) {
+          // Try to activate collaborative mode
+          const activated = switchAssistant('collaborative');
+          if (activated) {
+            response = "Collaborative AI mode activated. All AI systems are now working together to provide the most comprehensive solutions.";
+          } else {
+            response = "Unable to activate collaborative mode. Please ensure both Claude AI and GPT AI API keys are configured.";
+          }
+        } else {
+          // Already in collaborative mode
+          response = "Collaborative AI mode is already active. Quantum, Claude, and GPT systems are currently working together.";
         }
       }
       
