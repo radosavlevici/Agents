@@ -4,7 +4,9 @@ import {
   ScreenIcon,
   CircleNetworkIcon,
   ClockIcon,
-  CrossIcon
+  CrossIcon,
+  TerminalIcon,
+  DNASecurityIcon
 } from "./ui/Icons";
 
 const NavigationBar = () => {

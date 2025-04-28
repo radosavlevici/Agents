@@ -23,6 +23,7 @@ export default function TerminalAssistant() {
   }>({ anthropic: false, openai: false });
   const [activeAssistant, setActiveAssistant] = useState<"anthropic" | "openai" | "quantum" | null>("quantum");
   const [aiLoading, setAiLoading] = useState(false);
+  const [waitingForKeyConfirmation, setWaitingForKeyConfirmation] = useState<"anthropic" | "openai" | null>(null);
   
   // Device information
   const deviceInfo = {
@@ -389,10 +390,7 @@ export default function TerminalAssistant() {
     });
     
     try {
-      // In a real application, this would be linked to a dialog form
-      // where the user could enter their API key
-      
-      // For now, we'll just add a simulated message about where to add the key
+      // Request user to provide the API key
       setTimeout(() => {
         setMessages(prev => [
           ...prev,
@@ -402,18 +400,29 @@ export default function TerminalAssistant() {
           }
         ]);
         
-        // Optional: Here you could trigger a system to ask for secrets
-        // This would typically be handled by the platform configuration
-        
-        // Example message on how to set API keys
+        // Explain how to set API keys in common environments
         setTimeout(() => {
           setMessages(prev => [
             ...prev,
             {
-              text: `Tip: If you're using a platform like Replit, you can add your API keys in the Secrets tab in the Tools panel. Make sure to set the key name as ${service === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'}.`,
+              text: `Tip: You need to set your API key as an environment variable named ${service === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'}. This will allow your Quantum Terminal to securely connect to the ${serviceName} service.`,
               isUser: false
             }
           ]);
+          
+          // Add button in message to request API key from user in a future version
+          setTimeout(() => {
+            setMessages(prev => [
+              ...prev,
+              {
+                text: `⚡ [ACTION REQUIRED] ⚡\n\nPlease set up your ${service === 'anthropic' ? 'Anthropic' : 'OpenAI'} API key to continue using the ${serviceName} functionality.\n\nType 'yes' to continue if you've added the API key, or 'no' if you need help getting one.`,
+                isUser: false
+              }
+            ]);
+            
+            // Set flag to watch for user response about API key
+            setWaitingForKeyConfirmation(service);
+          }, 3000);
         }, 2000);
         
       }, 1000);
