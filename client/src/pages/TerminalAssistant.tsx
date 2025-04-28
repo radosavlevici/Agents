@@ -2060,6 +2060,11 @@ Your development environment is now operating at optimal parameters.`,
     });
   };
 
+  // State for showing device connector
+  const [showDeviceConnector, setShowDeviceConnector] = useState(false);
+  const [showDeviceMetrics, setShowDeviceMetrics] = useState(false);
+  const [showDeviceOperations, setShowDeviceOperations] = useState(false);
+  
   return (
     <QuantumTerminalLayout title="Personal Assistant">
       <div className="flex flex-col min-h-[500px] h-full">
@@ -2590,8 +2595,29 @@ Your development environment is now operating at optimal parameters.`,
             <div className="flex flex-col gap-1 mt-1">
               <div className="flex justify-between items-center text-xs text-terminal-gray">
                 <div>Connected to iCloud account: ervin210@icloud.com</div>
-                {isMobileConnected && (
-                  <div className="text-terminal-green">iPhone sync active</div>
+                {connectedDevice ? (
+                  <div className="flex items-center gap-2">
+                    <div className="text-terminal-green">{connectedDevice.name} connected</div>
+                    <button 
+                      onClick={() => setShowDeviceMetrics(prev => !prev)}
+                      className="text-terminal-cyan hover:underline"
+                    >
+                      View Metrics
+                    </button>
+                    <button 
+                      onClick={() => setShowDeviceOperations(prev => !prev)}
+                      className="text-terminal-amber hover:underline"
+                    >
+                      Device Operations
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowDeviceConnector(true)}
+                    className="text-terminal-amber hover:underline"
+                  >
+                    Connect Device
+                  </button>
                 )}
               </div>
               
