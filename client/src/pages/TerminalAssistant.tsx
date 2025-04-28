@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import QuantumTerminalLayout from "../components/QuantumTerminalLayout";
+import QuantumTerminalLayout from "@/components/QuantumTerminalLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";

@@ -1,6 +1,6 @@
 import { ReactNode, useEffect } from "react";
-import TerminalHeader from "../components/TerminalHeader";
-import NavigationBar from "../components/NavigationBar";
+import TerminalHeader from "./TerminalHeader";
+import NavigationBar from "./NavigationBar";
 import { Link } from "wouter";
 
 interface QuantumTerminalLayoutProps {
