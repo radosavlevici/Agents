@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { getAIResponse } from "@/lib/aiServices";
 
 export default function TerminalAssistant() {
   const [input, setInput] = useState("");
@@ -16,6 +17,12 @@ export default function TerminalAssistant() {
   const [emergencyMode, setEmergencyMode] = useState(false);
   const [apiConnected, setApiConnected] = useState(false);
   const [apiConnectionStatus, setApiConnectionStatus] = useState<"connecting" | "connected" | "failed" | "idle">("idle");
+  const [aiAssistants, setAiAssistants] = useState<{
+    anthropic: boolean;
+    openai: boolean;
+  }>({ anthropic: false, openai: false });
+  const [activeAssistant, setActiveAssistant] = useState<"anthropic" | "openai" | "quantum" | null>("quantum");
+  const [aiLoading, setAiLoading] = useState(false);
   
   // Device information
   const deviceInfo = {
@@ -112,41 +119,128 @@ export default function TerminalAssistant() {
     }, 3000);
   };
 
-  const handleSendMessage = () => {
+  // Function to activate AI assistants
+  const activateAIAssistant = (assistantType: 'anthropic' | 'openai') => {
+    setAiAssistants(prev => ({ ...prev, [assistantType]: true }));
+    
+    toast({
+      title: `${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'} Activated`,
+      description: `Connected to ${assistantType === 'anthropic' ? 'Anthropic Claude' : 'OpenAI GPT'} for enhanced assistant capabilities.`,
+    });
+    
+    setMessages(prev => [
+      ...prev,
+      {
+        text: `${assistantType === 'anthropic' ? 'Claude AI' : 'GPT AI'} integration activated. Your assistant now has enhanced capabilities.`,
+        isUser: false
+      }
+    ]);
+  };
+
+  // Handle switching active assistants
+  const switchAssistant = (assistantType: 'anthropic' | 'openai' | 'quantum') => {
+    if ((assistantType === 'anthropic' && !aiAssistants.anthropic) || 
+        (assistantType === 'openai' && !aiAssistants.openai)) {
+      
+      // Activate the assistant if not already active
+      if (assistantType === 'anthropic' || assistantType === 'openai') {
+        activateAIAssistant(assistantType);
+      }
+    }
+    
+    setActiveAssistant(assistantType);
+    
+    toast({
+      title: `Switched to ${assistantType === 'anthropic' ? 'Claude AI' : assistantType === 'openai' ? 'GPT AI' : 'Quantum AI'}`,
+      description: `Your assistant is now powered by ${assistantType === 'anthropic' ? 'Anthropic Claude' : assistantType === 'openai' ? 'OpenAI GPT' : 'Quantum Terminal AI'}.`,
+    });
+  };
+
+  const handleSendMessage = async () => {
     if (!input.trim()) return;
     
     // Add user message
     setMessages(prev => [...prev, {text: input, isUser: true}]);
     
-    // Simulate AI response
-    setTimeout(() => {
+    // Check for AI connection keywords
+    if (input.toLowerCase().includes("use claude") || input.toLowerCase().includes("anthropic") || input.toLowerCase().includes("use claude ai")) {
+      activateAIAssistant('anthropic');
+      switchAssistant('anthropic');
+      setInput("");
+      return;
+    } else if (input.toLowerCase().includes("use gpt") || input.toLowerCase().includes("openai") || input.toLowerCase().includes("use gpt ai")) {
+      activateAIAssistant('openai');
+      switchAssistant('openai');
+      setInput("");
+      return;
+    } else if (input.toLowerCase().includes("use quantum") || input.toLowerCase().includes("switch to quantum")) {
+      switchAssistant('quantum');
+      setInput("");
+      return;
+    }
+    
+    // Check for emergency keywords first
+    if (emergencyMode || input.toLowerCase().includes("emergency") || input.toLowerCase().includes("help me") || input.toLowerCase().includes("sos")) {
+      if (!emergencyMode) {
+        setEmergencyMode(true);
+        const emergencyResponse = "EMERGENCY MODE ACTIVATED. Sending your device information (iPhone MU773ZD/A, Serial: D2VMW6RNW2) and location to emergency services. Stay on this channel for updates.";
+        setMessages(prev => [...prev, {text: emergencyResponse, isUser: false}]);
+      } else {
+        const emergencyUpdateResponse = "Emergency services have been notified. Your location is being tracked. Please stay in place if possible. Help is on the way.";
+        setMessages(prev => [...prev, {text: emergencyUpdateResponse, isUser: false}]);
+      }
+      setInput("");
+      return;
+    }
+    
+    // Check for API connection commands
+    if (input.toLowerCase().includes("api") || input.toLowerCase().includes("connect api") || input.toLowerCase().includes("external")) {
+      if (!apiConnected) {
+        const apiResponse = "I'll establish connection to the API endpoints for enhanced functionality. Initiating connection now...";
+        setMessages(prev => [...prev, {text: apiResponse, isUser: false}]);
+        // Trigger API connection process
+        connectToApi();
+      } else {
+        const statusList = apiInfo.endpoints.map(endpoint => 
+          `- ${endpoint.name}: ${endpoint.status === 'active' ? '✓ Online' : '⚠️ Standby'}`
+        ).join('\n');
+        
+        const apiStatusResponse = `API connection is already active. Currently connected to ${apiInfo.endpoints.length} endpoints:\n${statusList}\n\nLast sync: ${new Date(apiInfo.lastSyncTime).toLocaleTimeString()}`;
+        setMessages(prev => [...prev, {text: apiStatusResponse, isUser: false}]);
+      }
+      setInput("");
+      return;
+    }
+    
+    // Handle AI responses based on active assistant
+    if (activeAssistant === 'anthropic' || activeAssistant === 'openai') {
+      try {
+        setAiLoading(true);
+        
+        let loadingMsg = "Processing your request...";
+        setMessages(prev => [...prev, {text: loadingMsg, isUser: false}]);
+        
+        // Call the AI service
+        const aiResponse = await getAIResponse(input, activeAssistant);
+        
+        // Remove loading message and add actual response
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages.pop(); // Remove loading message
+          return [...newMessages, {text: aiResponse, isUser: false}];
+        });
+      } catch (error) {
+        console.error("Error getting AI response:", error);
+        setMessages(prev => [...prev, {text: "Sorry, I encountered an error processing your request with the AI service. Would you like to try again?", isUser: false}]);
+      } finally {
+        setAiLoading(false);
+      }
+    } else {
+      // Default Quantum Assistant response logic (existing keyword-based responses)
       let response = "I'm processing your request. As your personal Quantum Assistant, I'm here to help with any tasks for ervin210@icloud.com.";
       
-      // Check for emergency keywords first
-      if (emergencyMode || input.toLowerCase().includes("emergency") || input.toLowerCase().includes("help") || input.toLowerCase().includes("sos")) {
-        if (!emergencyMode) {
-          setEmergencyMode(true);
-          response = "EMERGENCY MODE ACTIVATED. Sending your device information (iPhone MU773ZD/A, Serial: D2VMW6RNW2) and location to emergency services. Stay on this channel for updates.";
-        } else {
-          response = "Emergency services have been notified. Your location is being tracked. Please stay in place if possible. Help is on the way.";
-        }
-      }
-      // Check for API connection commands
-      else if (input.toLowerCase().includes("api") || input.toLowerCase().includes("connect api") || input.toLowerCase().includes("external")) {
-        if (!apiConnected) {
-          response = "I'll establish connection to the API endpoints for enhanced functionality. Initiating connection now...";
-          // Trigger API connection process
-          connectToApi();
-        } else {
-          const statusList = apiInfo.endpoints.map(endpoint => 
-            `- ${endpoint.name}: ${endpoint.status === 'active' ? '✓ Online' : '⚠️ Standby'}`
-          ).join('\n');
-          
-          response = `API connection is already active. Currently connected to ${apiInfo.endpoints.length} endpoints:\n${statusList}\n\nLast sync: ${new Date(apiInfo.lastSyncTime).toLocaleTimeString()}`;
-        }
-      }
       // Enhanced keyword matching for iCloud integration demonstration
-      else if (input.toLowerCase().includes("email") || input.toLowerCase().includes("icloud")) {
+      if (input.toLowerCase().includes("email") || input.toLowerCase().includes("icloud")) {
         response = "Your iCloud email (ervin210@icloud.com) is secure. Last login was from your usual location. No suspicious activities detected. Would you like me to scan for potential phishing attempts?";
       } else if (input.toLowerCase().includes("phone") || input.toLowerCase().includes("mobile") || input.toLowerCase().includes("device")) {
         response = `Your iPhone (${deviceInfo.modelNumber}, SN:${deviceInfo.serialNumber}) is currently connected and secured. Battery level is at ${deviceInfo.batteryStatus}. Running ${deviceInfo.osVersion}. Last backup: ${deviceInfo.lastBackup}. Would you like me to run a security scan?`;
@@ -171,10 +265,12 @@ export default function TerminalAssistant() {
           response = `Currently connected to the following service endpoints:\n` +
                      apiInfo.endpoints.map(ep => `- ${ep.name} (${ep.url}): ${ep.status}`).join('\n');
         }
+      } else if (input.toLowerCase().includes("ai") || input.toLowerCase().includes("assistant")) {
+        response = "I can connect to advanced AI services to enhance my capabilities. You can say 'Use Claude AI' or 'Use GPT AI' to activate these assistants.";
       }
       
       setMessages(prev => [...prev, {text: response, isUser: false}]);
-    }, 1200);
+    }
     
     // Clear input
     setInput("");
@@ -203,12 +299,31 @@ export default function TerminalAssistant() {
         <div className={`bg-terminal-dark-bg p-4 rounded-t border ${emergencyMode ? 'border-red-700 border-2' : 'border-gray-700'}`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className={`text-lg font-bold ${emergencyMode ? 'text-terminal-red animate-pulse' : 'text-terminal-cyan'}`}>
-                {emergencyMode ? 'EMERGENCY MODE' : 'QUANTUM ASSISTANT'}
+              <div className={`text-lg font-bold ${
+                emergencyMode 
+                  ? 'text-terminal-red animate-pulse' 
+                  : activeAssistant === 'anthropic' 
+                    ? 'text-purple-400' 
+                    : activeAssistant === 'openai' 
+                      ? 'text-green-400' 
+                      : 'text-terminal-cyan'
+              }`}>
+                {emergencyMode 
+                  ? 'EMERGENCY MODE' 
+                  : activeAssistant === 'anthropic' 
+                    ? 'CLAUDE AI ASSISTANT' 
+                    : activeAssistant === 'openai' 
+                      ? 'GPT AI ASSISTANT' 
+                      : 'QUANTUM ASSISTANT'}
               </div>
               {emergencyMode && (
                 <div className="bg-terminal-red px-2 py-1 rounded text-xs text-black animate-pulse">
                   SOS ACTIVE
+                </div>
+              )}
+              {aiLoading && (
+                <div className="bg-terminal-cyan px-2 py-1 rounded text-xs text-black animate-pulse">
+                  AI PROCESSING
                 </div>
               )}
             </div>
@@ -278,6 +393,49 @@ export default function TerminalAssistant() {
                 </div>
                 <div className="text-white text-xs">
                   Location tracking: ACTIVE | Device info transmitted
+                </div>
+              </div>
+            )}
+            
+            {/* AI Services Control Panel */}
+            {!emergencyMode && (
+              <div className="flex items-center justify-between mt-2 bg-black/30 p-2 rounded border border-gray-700">
+                <div className="text-xs text-terminal-gray font-semibold">AI Services:</div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={activeAssistant === 'quantum' ? "default" : "outline"}
+                    className={`text-xs ${activeAssistant === 'quantum' ? 'bg-terminal-cyan text-black' : 'border-terminal-cyan text-terminal-cyan'}`}
+                    onClick={() => switchAssistant('quantum')}
+                  >
+                    Quantum AI
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={activeAssistant === 'anthropic' ? "default" : "outline"}
+                    className={`text-xs ${activeAssistant === 'anthropic' ? 'bg-purple-500 text-white' : 'border-purple-500 text-purple-400'}`}
+                    onClick={() => {
+                      if (!aiAssistants.anthropic) {
+                        activateAIAssistant('anthropic');
+                      }
+                      switchAssistant('anthropic');
+                    }}
+                  >
+                    Claude AI {aiAssistants.anthropic ? '✓' : ''}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={activeAssistant === 'openai' ? "default" : "outline"}
+                    className={`text-xs ${activeAssistant === 'openai' ? 'bg-green-500 text-white' : 'border-green-500 text-green-400'}`}
+                    onClick={() => {
+                      if (!aiAssistants.openai) {
+                        activateAIAssistant('openai');
+                      }
+                      switchAssistant('openai');
+                    }}
+                  >
+                    GPT AI {aiAssistants.openai ? '✓' : ''}
+                  </Button>
                 </div>
               </div>
             )}
