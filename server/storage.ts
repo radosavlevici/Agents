@@ -167,6 +167,7 @@ export class MemStorage implements IStorage {
       id, 
       startedAt,
       status: scan.status || 'pending',
+      result: scan.result || null,
       completedAt: null
     };
     this.securityScans.set(id, securityScan);
