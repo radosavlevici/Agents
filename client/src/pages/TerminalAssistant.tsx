@@ -1116,7 +1116,8 @@ export default function TerminalAssistant() {
               scanning: false,
               updating: false,
               optimizing: false,
-              monitoring: true
+              monitoring: true,
+              aiAnalysis: false
             });
             
             // Alert about detected security issue
@@ -1134,7 +1135,8 @@ export default function TerminalAssistant() {
               scanning: false,
               updating: false,
               optimizing: false,
-              monitoring: true
+              monitoring: true,
+              aiAnalysis: false
             });
             
             // Alert about detected performance issue
@@ -1394,27 +1396,36 @@ export default function TerminalAssistant() {
                   <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
                     <Button
                       size="sm"
-                      variant={activeAssistant === 'quantum' ? "default" : "outline"}
-                      className={`text-xs ${activeAssistant === 'quantum' ? 'bg-terminal-cyan text-black' : 'border-terminal-cyan text-terminal-cyan'}`}
+                      variant={activeAssistant === 'quantum' && !collaborativeMode ? "default" : "outline"}
+                      className={`text-xs ${activeAssistant === 'quantum' && !collaborativeMode ? 'bg-terminal-cyan text-black' : 'border-terminal-cyan text-terminal-cyan'}`}
                       onClick={() => switchAssistant('quantum')}
                     >
                       Quantum AI
                     </Button>
                     <Button
                       size="sm"
-                      variant={activeAssistant === 'anthropic' ? "default" : "outline"}
-                      className={`text-xs ${activeAssistant === 'anthropic' ? 'bg-purple-500 text-white' : 'border-purple-500 text-purple-400'}`}
+                      variant={activeAssistant === 'anthropic' && !collaborativeMode ? "default" : "outline"}
+                      className={`text-xs ${activeAssistant === 'anthropic' && !collaborativeMode ? 'bg-purple-500 text-white' : 'border-purple-500 text-purple-400'}`}
                       onClick={() => aiServicesStatus.anthropic ? switchAssistant('anthropic') : handleRequestApiKey('anthropic')}
                     >
                       Claude AI {aiServicesStatus.anthropic ? '✓' : '⚠️'}
                     </Button>
                     <Button
                       size="sm"
-                      variant={activeAssistant === 'openai' ? "default" : "outline"}
-                      className={`text-xs ${activeAssistant === 'openai' ? 'bg-green-500 text-white' : 'border-green-500 text-green-400'}`}
+                      variant={activeAssistant === 'openai' && !collaborativeMode ? "default" : "outline"}
+                      className={`text-xs ${activeAssistant === 'openai' && !collaborativeMode ? 'bg-green-500 text-white' : 'border-green-500 text-green-400'}`}
                       onClick={() => aiServicesStatus.openai ? switchAssistant('openai') : handleRequestApiKey('openai')}
                     >
                       GPT AI {aiServicesStatus.openai ? '✓' : '⚠️'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={collaborativeMode ? "default" : "outline"}
+                      className={`text-xs ${collaborativeMode ? 'bg-amber-500 text-black' : 'border-amber-500 text-amber-400'}`}
+                      onClick={() => switchAssistant('collaborative')}
+                      disabled={!aiServicesStatus.anthropic || !aiServicesStatus.openai}
+                    >
+                      Collaborative Mode {collaborativeMode ? '✓' : ''}
                     </Button>
                   </div>
                 </div>
@@ -1424,21 +1435,47 @@ export default function TerminalAssistant() {
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
                     <div className="flex flex-wrap gap-x-4 gap-y-2">
                       <div className="flex items-center">
-                        <div className={`h-2 w-2 rounded-full mr-1.5 bg-terminal-cyan`}></div>
-                        <span className="text-xs text-terminal-cyan">Quantum: Active</span>
+                        <div className={`h-2 w-2 rounded-full mr-1.5 ${collaborativeMode ? 'bg-terminal-cyan animate-pulse' : 'bg-terminal-cyan'}`}></div>
+                        <span className="text-xs text-terminal-cyan">Quantum: {activeAIContributors.quantum ? 'Active' : 'Inactive'} {collaborativeMode && activeAIContributors.quantum ? '(Collaborative)' : ''}</span>
                       </div>
                       <div className="flex items-center">
-                        <div className={`h-2 w-2 rounded-full mr-1.5 ${aiServicesStatus.anthropic ? 'bg-purple-500' : 'bg-gray-500'}`}></div>
+                        <div className={`h-2 w-2 rounded-full mr-1.5 ${
+                          !aiServicesStatus.anthropic 
+                            ? 'bg-gray-500' 
+                            : collaborativeMode && activeAIContributors.anthropic
+                              ? 'bg-purple-500 animate-pulse'
+                              : 'bg-purple-500'
+                        }`}></div>
                         <span className={`text-xs ${aiServicesStatus.anthropic ? 'text-purple-400' : 'text-gray-500'}`}>
-                          Claude: {aiServicesStatus.anthropic ? 'Available' : 'No API Key'}
+                          Claude: {!aiServicesStatus.anthropic 
+                            ? 'No API Key' 
+                            : activeAIContributors.anthropic 
+                              ? 'Active' + (collaborativeMode ? ' (Collaborative)' : '') 
+                              : 'Available'}
                         </span>
                       </div>
                       <div className="flex items-center">
-                        <div className={`h-2 w-2 rounded-full mr-1.5 ${aiServicesStatus.openai ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                        <div className={`h-2 w-2 rounded-full mr-1.5 ${
+                          !aiServicesStatus.openai 
+                            ? 'bg-gray-500' 
+                            : collaborativeMode && activeAIContributors.openai
+                              ? 'bg-green-500 animate-pulse'
+                              : 'bg-green-500'
+                        }`}></div>
                         <span className={`text-xs ${aiServicesStatus.openai ? 'text-green-400' : 'text-gray-500'}`}>
-                          GPT: {aiServicesStatus.openai ? 'Available' : 'No API Key'}
+                          GPT: {!aiServicesStatus.openai 
+                            ? 'No API Key' 
+                            : activeAIContributors.openai 
+                              ? 'Active' + (collaborativeMode ? ' (Collaborative)' : '') 
+                              : 'Available'}
                         </span>
                       </div>
+                      {collaborativeMode && (
+                        <div className="flex items-center">
+                          <div className="h-2 w-2 rounded-full mr-1.5 bg-amber-500 animate-pulse"></div>
+                          <span className="text-xs text-amber-400 font-semibold">Collaborative Mode: Active</span>
+                        </div>
+                      )}
                     </div>
                     
                     <Button
