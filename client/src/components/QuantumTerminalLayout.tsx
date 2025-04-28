@@ -1,6 +1,6 @@
 import { ReactNode, useEffect } from "react";
-import TerminalHeader from "./TerminalHeader";
-import NavigationBar from "./NavigationBar";
+import TerminalHeader from "../components/TerminalHeader";
+import NavigationBar from "../components/NavigationBar";
 import { Link } from "wouter";
 
 interface QuantumTerminalLayoutProps {
@@ -37,9 +37,9 @@ const QuantumTerminalLayout = ({ children, title }: QuantumTerminalLayoutProps) 
           </div>
           
           <Link href="/">
-            <a className="text-terminal-green hover:text-terminal-cyan text-sm underline">
+            <div className="text-terminal-green hover:text-terminal-cyan text-sm underline cursor-pointer">
               Return to Main Terminal
-            </a>
+            </div>
           </Link>
         </div>
         
