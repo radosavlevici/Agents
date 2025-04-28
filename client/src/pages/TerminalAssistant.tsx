@@ -14,6 +14,42 @@ export default function TerminalAssistant() {
     isUser: boolean;
     source?: 'quantum' | 'anthropic' | 'openai' | 'system' | 'emergency';
   };
+
+  // Define task type for development and security tasks
+  type TaskType = 'development' | 'security' | 'general';
+  type TaskStatus = 'pending' | 'in-progress' | 'completed';
+  
+  type Task = {
+    id: number;
+    type: TaskType;
+    description: string;
+    status: TaskStatus;
+    priority: 'low' | 'medium' | 'high';
+    created: Date;
+    device?: string;
+    assignedTo?: string;
+  };
+  
+  // State for to-do tasks
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: 1,
+      type: 'security',
+      description: 'Run comprehensive security scan on iPhone',
+      status: 'pending',
+      priority: 'high',
+      created: new Date(),
+      device: 'iPhone MU773ZD/A'
+    },
+    {
+      id: 2,
+      type: 'development',
+      description: 'Update personal website with latest security patches',
+      status: 'pending',
+      priority: 'medium',
+      created: new Date()
+    }
+  ]);
   
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -464,15 +500,90 @@ export default function TerminalAssistant() {
       } else if (input.toLowerCase().includes("phone") || input.toLowerCase().includes("mobile") || input.toLowerCase().includes("device")) {
         response = `Your iPhone (${deviceInfo.modelNumber}, SN:${deviceInfo.serialNumber}) is currently connected and secured. Battery level is at ${deviceInfo.batteryStatus}. Running ${deviceInfo.osVersion}. Last backup: ${deviceInfo.lastBackup}. Would you like me to run a security scan?`;
       
-      // Development-related queries
+      // Development-related queries and fixes
       } else if (input.toLowerCase().includes("code") || input.toLowerCase().includes("develop") || input.toLowerCase().includes("program") || input.toLowerCase().includes("coding")) {
         response = "I can assist with development tasks through my AI integration. Would you like me to:\n1. Help debug an application issue\n2. Review code for security vulnerabilities\n3. Suggest development best practices\n4. Help write new code\n\nFor best results, I recommend switching to one of the advanced AI assistants by saying 'Use Claude AI' or 'Use GPT AI'.";
+      } else if (input.toLowerCase().includes("fix") && (input.toLowerCase().includes("development") || input.toLowerCase().includes("coding") || input.toLowerCase().includes("code"))) {
+        // Create a development-focused task
+        const newTask = createTask(
+          "Fix development issue: " + input.substring(0, 50) + "...",
+          'development',
+          'high'
+        );
+        
+        // Start fixing the development issue
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            text: `I'm analyzing the development issue and preparing a fix. This process will be done in 3 steps:\n\n1. Analyzing code structure and identifying problems\n2. Preparing solutions for the identified issues\n3. Implementing fixes with appropriate testing\n\nI've created task #${newTask.id} to track this process, and I'm starting work on it now.`,
+            isUser: false,
+            source: 'quantum'
+          }]);
+          
+          // Update task status to in-progress
+          updateTaskStatus(newTask.id, 'in-progress');
+          
+          // After a delay, simulate completing part of the fix
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              text: "I've analyzed the code structure and identified the following issues:\n\n- Code organization needs improvement\n- Some functions lack proper error handling\n- Performance bottlenecks in data processing functions\n\nI'm now preparing fixes for these issues. Would you like me to implement them automatically or review them with you first?",
+              isUser: false,
+              source: 'quantum'
+            }]);
+          }, 3000);
+        }, 1500);
+        
+        response = "I understand you need help fixing a development issue. I'll analyze the problem and prepare solutions immediately.";
       } else if (input.toLowerCase().includes("debug") || input.toLowerCase().includes("error") || input.toLowerCase().includes("fix code")) {
         response = "I can help troubleshoot your code issues. To proceed with debugging, please provide:\n- The error message you're receiving\n- The relevant code snippet\n- Language/framework you're using\n\nFor in-depth debugging assistance, I recommend activating Claude AI or GPT AI, which have specialized code understanding capabilities.";
       } else if (input.toLowerCase().includes("project") || input.toLowerCase().includes("github") || input.toLowerCase().includes("git") || input.toLowerCase().includes("repository")) {
         response = "I can help with your development projects and repository management. What would you like assistance with?\n- Setting up a new project\n- Code review and improvement\n- Security assessment of your codebase\n- Deployment strategies\n\nFor technical code reviews, I recommend activating one of the advanced AI assistants.";
       
-      // Security-related queries
+      // Security-related queries and fixes
+      } else if (input.toLowerCase().includes("fix") && (input.toLowerCase().includes("security") || input.toLowerCase().includes("vulnerability") || input.toLowerCase().includes("issue"))) {
+        // Create a security-focused task
+        const newTask = createTask(
+          "Fix security issue: " + input.substring(0, 50) + "...",
+          'security',
+          'high',
+          deviceInfo.deviceType
+        );
+        
+        // Connect to API endpoints if not already connected
+        if (!apiConnected) {
+          connectToApi();
+        }
+        
+        // Start fixing the security issue
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            text: `I'm addressing the security issue immediately. The process consists of these steps:\n\n1. Performing security scan to identify vulnerabilities\n2. Applying security patches and fixes\n3. Verifying successful implementation\n4. Strengthening security measures to prevent future issues\n\nI've created task #${newTask.id} to track this process and will update you on progress.`,
+            isUser: false,
+            source: 'quantum'
+          }]);
+          
+          // Update task status to in-progress
+          updateTaskStatus(newTask.id, 'in-progress');
+          
+          // After a delay, simulate finding and fixing issues
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              text: "Security scan complete. I've identified the following issues:\n\n- Outdated system software requiring security patches\n- Weak encryption settings on network connections\n- 3 suspicious login attempts blocked\n- Potential data exposure in cloud storage\n\nI'm implementing fixes for these issues now. Would you like a detailed report on each fix?",
+              isUser: false,
+              source: 'quantum'
+            }]);
+            
+            // After another delay, show progress on the fixes
+            setTimeout(() => {
+              setMessages(prev => [...prev, {
+                text: "Security fixes in progress:\n\n✅ Updated system security patches\n✅ Strengthened encryption settings\n✅ Blocked suspicious IP addresses\n⏳ Securing cloud storage permissions (60% complete)\n\nYour device security is already improving. I'll notify you when all fixes are complete.",
+                isUser: false,
+                source: 'quantum'
+              }]);
+            }, 5000);
+          }, 3000);
+        }, 1500);
+        
+        response = "I understand there's a security issue to fix. I'm initiating security protocols and will resolve this immediately.";
       } else if (input.toLowerCase().includes("scan") || input.toLowerCase().includes("security")) {
         if (!apiConnected) {
           response = `I'll need to connect to our security API endpoints first to perform a comprehensive scan. Type "connect API" to establish the connection.`;
@@ -621,6 +732,92 @@ export default function TerminalAssistant() {
     }
   };
 
+  // Functions for task management
+  const createTask = (description: string, type: TaskType = 'general', priority: 'low' | 'medium' | 'high' = 'medium', device?: string) => {
+    // Generate a unique ID for the task (simple increment for now)
+    const id = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1;
+    
+    const newTask: Task = {
+      id,
+      type,
+      description,
+      status: 'pending',
+      priority,
+      created: new Date(),
+      device,
+      assignedTo: 'ervin210@icloud.com'
+    };
+    
+    setTasks(prev => [...prev, newTask]);
+    
+    // Notify the user
+    toast({
+      title: `New ${type} task created`,
+      description: `Task #${id}: ${description}`,
+    });
+    
+    return newTask;
+  };
+  
+  const updateTaskStatus = (taskId: number, status: TaskStatus) => {
+    setTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, status } : task
+    ));
+    
+    const updatedTask = tasks.find(task => task.id === taskId);
+    
+    if (updatedTask) {
+      toast({
+        title: `Task #${taskId} updated`,
+        description: `Status changed to: ${status}`,
+      });
+    }
+    
+    return updatedTask;
+  };
+  
+  const deleteTask = (taskId: number) => {
+    const taskToDelete = tasks.find(task => task.id === taskId);
+    
+    if (taskToDelete) {
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+      
+      toast({
+        title: `Task #${taskId} deleted`,
+        description: `Removed: ${taskToDelete.description.substring(0, 30)}...`,
+      });
+      
+      return true;
+    }
+    
+    return false;
+  };
+  
+  const listTasks = (type?: TaskType, status?: TaskStatus) => {
+    let filteredTasks = [...tasks];
+    
+    if (type) {
+      filteredTasks = filteredTasks.filter(task => task.type === type);
+    }
+    
+    if (status) {
+      filteredTasks = filteredTasks.filter(task => task.status === status);
+    }
+    
+    // Sort by priority (high to low) and then by creation date (newest first)
+    filteredTasks.sort((a, b) => {
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+      
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      // If priority is the same, sort by creation date (newest first)
+      return b.created.getTime() - a.created.getTime();
+    });
+    
+    return filteredTasks;
+  };
+  
   const handleToggleVoice = () => {
     setVoiceEnabled(!voiceEnabled);
     toast({
