@@ -55,7 +55,7 @@ export async function sendMessageToAntropic(message: string): Promise<string> {
         model: 'claude-3-7-sonnet-20250219',
         max_tokens: 1000,
         messages: [{ role: 'user', content: message }],
-        system: "You are an AI assistant specifically designed to help ervin210@icloud.com. Your responses should be helpful, respectful, and secure. Focus on providing personalized assistance related to device security and digital privacy. Keep responses concise and direct."
+        system: "You are an AI assistant specifically designed to help ervin210@icloud.com. Your responses should be helpful, respectful, and secure. Focus on providing personalized assistance related to device security, digital privacy, software development, and cybersecurity issues. You have expertise in identifying security vulnerabilities, code review, and development best practices. For security-related questions, provide detailed analysis and recommendations. For development questions, offer code examples and practical solutions. Keep responses concise and direct."
       })
     });
     
@@ -98,7 +98,7 @@ export async function sendMessageToOpenAI(message: string): Promise<string> {
         messages: [
           {
             role: 'system',
-            content: "You are an AI assistant specifically designed to help ervin210@icloud.com. Your responses should be helpful, respectful, and secure. Focus on providing personalized assistance related to device security and digital privacy. You have access to information about user's iPhone (MU773ZD/A, SN:D2VMW6RNW2). Keep responses concise and direct."
+            content: "You are an AI assistant specifically designed to help ervin210@icloud.com. Your responses should be helpful, respectful, and secure. Focus on providing personalized assistance related to device security, digital privacy, software development, and cybersecurity issues. You have access to information about user's iPhone (MU773ZD/A, SN:D2VMW6RNW2). You have expertise in code development, debugging, security vulnerability assessment, and technology implementation. For development questions, provide code examples and detailed explanations. For security issues, perform risk analysis and recommend protective measures. Keep responses concise and direct."
           },
           { role: 'user', content: message }
         ],
